@@ -4,7 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connection Status</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2316a34a'/></svg>" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ConnCheck" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
@@ -28,6 +38,7 @@
       background: var(--bg);
       color: var(--text-primary);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -115,7 +126,7 @@
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    /* ── Service buttons row ── */
+    /* ── Service buttons ── */
     .services {
       display: flex;
       gap: 20px;
@@ -133,6 +144,7 @@
       cursor: pointer;
       padding: 0;
       font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .svc-shell {
@@ -169,18 +181,12 @@
       position: relative;
     }
 
-    .svc-btn:hover .svc-bulb   { transform: scale(1.06); }
-    .svc-btn:active .svc-bulb  { transform: scale(0.97); }
+    .svc-btn:active .svc-bulb { transform: scale(0.95); }
+    .svc-bulb svg { width: 28px; height: 28px; }
 
     .svc-bulb.online   { background: var(--green); }
     .svc-bulb.offline  { background: var(--red); }
     .svc-bulb.checking { background: #222; border: 2px solid #333; }
-
-    /* Telegram logo SVG inside bulb */
-    .svc-bulb svg {
-      width: 28px;
-      height: 28px;
-    }
 
     .svc-label {
       font-size: 10px;
@@ -234,9 +240,9 @@
     .log-entry .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .dot-green { background: #22c55e; }
     .dot-red   { background: #ef4444; }
-    .dot-gray  { background: #444; }
     .dot-blue  { background: #38bdf8; }
     .dot-red2  { background: #f87171; }
+    .dot-gray  { background: #444; }
     .log-entry .ts  { color: #444; flex-shrink: 0; }
     .log-entry .msg { color: #bbb; flex: 1; }
 
@@ -268,37 +274,27 @@
 
   <!-- Service buttons -->
   <div class="services">
-
-    <!-- Telegram -->
     <button class="svc-btn" onclick="probeService('telegram')" title="Check Telegram">
       <div class="svc-shell">
         <div class="svc-ring" id="svc-ring-telegram"></div>
         <div class="svc-bulb checking" id="svc-bulb-telegram">
-          <!-- Telegram paper-plane logo -->
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21.944 3.069a1.5 1.5 0 0 0-1.52-.232L2.56 9.907a1.5 1.5 0 0 0 .08 2.79l4.21 1.404 1.733 5.196a1 1 0 0 0 1.73.303l2.42-2.906 4.56 3.326a1.5 1.5 0 0 0 2.338-1.002l2-14.5a1.5 1.5 0 0 0-.687-1.449z" fill="#fff"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21.944 3.069a1.5 1.5 0 0 0-1.52-.232L2.56 9.907a1.5 1.5 0 0 0 .08 2.79l4.21 1.404 1.733 5.196a1 1 0 0 0 1.73.303l2.42-2.906 4.56 3.326a1.5 1.5 0 0 0 2.338-1.002l2-14.5a1.5 1.5 0 0 0-.687-1.449z" fill="#fff"/></svg>
         </div>
       </div>
       <div class="svc-label">Telegram</div>
-      <div class="svc-status checking" id="svc-status-telegram">—</div>
+      <div class="svc-status" id="svc-status-telegram">—</div>
     </button>
 
-    <!-- Yandex -->
     <button class="svc-btn" onclick="probeService('yandex')" title="Check Yandex">
       <div class="svc-shell">
         <div class="svc-ring" id="svc-ring-yandex"></div>
         <div class="svc-bulb checking" id="svc-bulb-yandex">
-          <!-- Yandex "Я" lettermark -->
-          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <text x="5" y="22" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#fff">Я</text>
-          </svg>
+          <svg viewBox="0 0 28 28" fill="none"><text x="5" y="22" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#fff">Я</text></svg>
         </div>
       </div>
       <div class="svc-label">Yandex</div>
-      <div class="svc-status checking" id="svc-status-yandex">—</div>
+      <div class="svc-status" id="svc-status-yandex">—</div>
     </button>
-
   </div>
 
   <!-- Event log -->
@@ -308,7 +304,7 @@
   </div>
 
   <script>
-    // ── DOM refs: main ──
+    // ── Main internet probe ──
     const bulb       = document.getElementById('bulb');
     const ring       = document.getElementById('ring');
     const iconWifi   = document.getElementById('bulb-icon-wifi');
@@ -385,25 +381,15 @@
       probeTimer = setTimeout(probe, currentState === 'online' ? 5000 : 3000);
     }
 
-    window.addEventListener('online',  () => { addLog('Browser: online event', 'dot-green');  probe(); });
-    window.addEventListener('offline', () => { addLog('Browser: offline event', 'dot-red'); setOffline(); });
+    window.addEventListener('online',  () => { addLog('Browser: online event', 'dot-green'); probe(); });
+    window.addEventListener('offline', () => { addLog('Browser: offline event', 'dot-red');  setOffline(); });
 
     probe();
 
     // ── Service checkers ──
-
     const SERVICES = {
-      telegram: {
-        // Telegram's web endpoint — mode no-cors so it always "succeeds" if reachable
-        url:      'https://web.telegram.org/favicon.ico',
-        dotClass: 'dot-blue',
-        label:    'Telegram',
-      },
-      yandex: {
-        url:      'https://yandex.ru/favicon.ico',
-        dotClass: 'dot-red2',
-        label:    'Yandex',
-      }
+      telegram: { url: 'https://web.telegram.org/favicon.ico', dotClass: 'dot-blue', label: 'Telegram' },
+      yandex:   { url: 'https://yandex.ru/favicon.ico',        dotClass: 'dot-red2', label: 'Yandex'   }
     };
 
     const svcState  = { telegram: null, yandex: null };
@@ -412,57 +398,52 @@
     function setSvcOnline(id, latency) {
       const prev = svcState[id];
       svcState[id] = 'online';
-
-      document.getElementById(`svc-bulb-${id}`).className  = 'svc-bulb online';
-      document.getElementById(`svc-ring-${id}`).className  = 'svc-ring pulse-green';
+      document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb online';
+      document.getElementById(`svc-ring-${id}`).className = 'svc-ring pulse-green';
       const st = document.getElementById(`svc-status-${id}`);
       st.className   = 'svc-status online';
       st.textContent = latency ? `${latency}ms` : 'ok';
-
       if (prev !== 'online') addLog(`${SERVICES[id].label}: reachable (${latency}ms)`, SERVICES[id].dotClass);
     }
 
     function setSvcOffline(id) {
       const prev = svcState[id];
       svcState[id] = 'offline';
-
-      document.getElementById(`svc-bulb-${id}`).className  = 'svc-bulb offline';
-      document.getElementById(`svc-ring-${id}`).className  = 'svc-ring pulse-red';
+      document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb offline';
+      document.getElementById(`svc-ring-${id}`).className = 'svc-ring pulse-red';
       const st = document.getElementById(`svc-status-${id}`);
       st.className   = 'svc-status offline';
       st.textContent = 'blocked';
-
       if (prev !== 'offline') addLog(`${SERVICES[id].label}: not reachable`, 'dot-red');
     }
 
     async function probeService(id) {
       const svc   = SERVICES[id];
       const start = Date.now();
-
-      // Only show checking state on very first probe (no flicker at fast intervals)
       if (svcState[id] === null) {
         document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb checking';
       }
-
       try {
-        await fetch(`${svc.url}?_=${start}`, {
-          method: 'GET', cache: 'no-store', mode: 'no-cors'
-        });
-        // no-cors opaque response — if we get here the host was reachable
-        const lat = Date.now() - start;
-        setSvcOnline(id, lat);
+        await fetch(`${svc.url}?_=${start}`, { method: 'GET', cache: 'no-store', mode: 'no-cors' });
+        setSvcOnline(id, Date.now() - start);
       } catch {
-        // Network error = blocked or no connectivity
         setSvcOffline(id);
       }
-
       clearTimeout(svcTimers[id]);
       svcTimers[id] = setTimeout(() => probeService(id), svcState[id] === 'online' ? 1500 : 1000);
     }
 
-    // Auto-start both service probes
     probeService('telegram');
     probeService('yandex');
+
+    // ── Service Worker registration ──
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/conn_check/sw.js')
+          .then(r => console.log('SW registered:', r.scope))
+          .catch(e => console.warn('SW registration failed:', e));
+      });
+    }
   </script>
 </body>
 </html>
