@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connection Status</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2316a34a'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #888;
+      --text-muted: #555;
+      --green: #16a34a;
+      --green-glow: #22c55e;
+      --red: #dc2626;
+      --red-glow: #ef4444;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    /* ── Main lamp ── */
+    .lamp-shell {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
+
+    .ring.pulse-green { animation: ripple-green 1.8s ease-out infinite; border-color: rgba(34,197,94,0.35); }
+    .ring.pulse-red   { animation: ripple-red 1s ease-out infinite;     border-color: rgba(239,68,68,0.4); }
+
+    @keyframes ripple-green { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+    @keyframes ripple-red   { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+    .bulb {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      transition: background 0.4s ease;
+    }
+
+    .bulb svg { width: 52px; height: 52px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .bulb.online   { background: var(--green); }
+    .bulb.offline  { background: var(--red); }
+    .bulb.checking { background: #222; border: 2px solid #333; }
+
+    /* ── Status text ── */
+    .status-label {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .status-label.online   { color: var(--green-glow); }
+    .status-label.offline  { color: var(--red-glow); }
+    .status-label.checking { color: var(--text-secondary); }
+
+    .detail {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      min-height: 1.4em;
+      transition: color 0.3s;
+    }
+
+    /* ── Ping row ── */
+    .ping-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .ping-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Service buttons row ── */
+    .services {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .svc-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .svc-shell {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .svc-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      pointer-events: none;
+    }
+    .svc-ring.pulse-green { animation: ripple-green-s 1.8s ease-out infinite; border-color: rgba(34,197,94,0.35); }
+    .svc-ring.pulse-red   { animation: ripple-red-s   1s ease-out infinite;   border-color: rgba(239,68,68,0.4); }
+
+    @keyframes ripple-green-s { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.65); opacity: 0; } }
+    @keyframes ripple-red-s   { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.55); opacity: 0; } }
+
+    .svc-bulb {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.4s ease, transform 0.15s ease;
+      z-index: 1;
+      position: relative;
+    }
+
+    .svc-btn:hover .svc-bulb   { transform: scale(1.06); }
+    .svc-btn:active .svc-bulb  { transform: scale(0.97); }
+
+    .svc-bulb.online   { background: var(--green); }
+    .svc-bulb.offline  { background: var(--red); }
+    .svc-bulb.checking { background: #222; border: 2px solid #333; }
+
+    /* Telegram logo SVG inside bulb */
+    .svc-bulb svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .svc-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .svc-status {
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      min-height: 1.2em;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .svc-status.online  { color: var(--green-glow); }
+    .svc-status.offline { color: var(--red-glow); }
+
+    /* ── Log ── */
+    .log {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .log-header {
+      background: var(--surface);
+      padding: 8px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-entries {
+      max-height: 140px;
+      overflow-y: auto;
+      background: #111;
+    }
+    .log-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      font-size: 11px;
+      border-bottom: 1px solid #1a1a1a;
+      text-align: left;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+    .dot-gray  { background: #444; }
+    .dot-blue  { background: #38bdf8; }
+    .dot-red2  { background: #f87171; }
+    .log-entry .ts  { color: #444; flex-shrink: 0; }
+    .log-entry .msg { color: #bbb; flex: 1; }
+
+    .log-entries::-webkit-scrollbar { width: 4px; }
+    .log-entries::-webkit-scrollbar-track { background: transparent; }
+    .log-entries::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- Main internet bulb -->
+  <div class="lamp-shell">
+    <div class="ring" id="ring"></div>
+    <div class="bulb checking" id="bulb">
+      <svg id="bulb-icon-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#fff" stroke="none"/></svg>
+      <svg id="bulb-icon-off" viewBox="0 0 24 24" style="display:none;" stroke="#fff" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a11 11 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#fff" stroke="none"/></svg>
+    </div>
+  </div>
+
+  <div>
+    <div class="status-label checking" id="status-label">Checking...</div>
+    <div class="detail" id="detail">Running network probe</div>
+  </div>
+
+  <div class="ping-row">
+    <div class="ping-dot"></div>
+    <span id="ping-text">Probing network...</span>
+  </div>
+
+  <!-- Service buttons -->
+  <div class="services">
+
+    <!-- Telegram -->
+    <button class="svc-btn" onclick="probeService('telegram')" title="Check Telegram">
+      <div class="svc-shell">
+        <div class="svc-ring" id="svc-ring-telegram"></div>
+        <div class="svc-bulb checking" id="svc-bulb-telegram">
+          <!-- Telegram paper-plane logo -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21.944 3.069a1.5 1.5 0 0 0-1.52-.232L2.56 9.907a1.5 1.5 0 0 0 .08 2.79l4.21 1.404 1.733 5.196a1 1 0 0 0 1.73.303l2.42-2.906 4.56 3.326a1.5 1.5 0 0 0 2.338-1.002l2-14.5a1.5 1.5 0 0 0-.687-1.449z" fill="#fff"/>
+          </svg>
+        </div>
+      </div>
+      <div class="svc-label">Telegram</div>
+      <div class="svc-status checking" id="svc-status-telegram">—</div>
+    </button>
+
+    <!-- Yandex -->
+    <button class="svc-btn" onclick="probeService('yandex')" title="Check Yandex">
+      <div class="svc-shell">
+        <div class="svc-ring" id="svc-ring-yandex"></div>
+        <div class="svc-bulb checking" id="svc-bulb-yandex">
+          <!-- Yandex "Я" lettermark -->
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="5" y="22" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#fff">Я</text>
+          </svg>
+        </div>
+      </div>
+      <div class="svc-label">Yandex</div>
+      <div class="svc-status checking" id="svc-status-yandex">—</div>
+    </button>
+
+  </div>
+
+  <!-- Event log -->
+  <div class="log">
+    <div class="log-header">Event log</div>
+    <div class="log-entries" id="log-entries"></div>
+  </div>
+
+  <script>
+    // ── DOM refs: main ──
+    const bulb       = document.getElementById('bulb');
+    const ring       = document.getElementById('ring');
+    const iconWifi   = document.getElementById('bulb-icon-wifi');
+    const iconOff    = document.getElementById('bulb-icon-off');
+    const label      = document.getElementById('status-label');
+    const detail     = document.getElementById('detail');
+    const pingText   = document.getElementById('ping-text');
+    const logEntries = document.getElementById('log-entries');
+
+    let currentState = null;
+    let probeTimer   = null;
+
+    function ts() { return new Date().toTimeString().slice(0, 8); }
+
+    function addLog(msg, dotClass) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<div class="dot ${dotClass}"></div><span class="ts">${ts()}</span><span class="msg">${msg}</span>`;
+      logEntries.prepend(entry);
+      const all = logEntries.querySelectorAll('.log-entry');
+      if (all.length > 40) all[all.length - 1].remove();
+    }
+
+    function updateTitle(online) {
+      document.title = online ? '🟢 Online' : '🔴 Offline';
+    }
+
+    function setOnline(latency) {
+      if (currentState === 'online') return;
+      currentState = 'online';
+      bulb.className  = 'bulb online';
+      ring.className  = 'ring pulse-green';
+      label.className = 'status-label online';
+      iconWifi.style.display = '';
+      iconOff.style.display  = 'none';
+      label.textContent  = 'Online';
+      detail.textContent = latency ? `Response in ${latency}ms` : 'Connected';
+      detail.style.color = '#22c55e';
+      pingText.textContent = latency ? `Last ping: ${latency}ms — ${ts()}` : `Connected — ${ts()}`;
+      updateTitle(true);
+      addLog('Internet: connection established', 'dot-green');
+    }
+
+    function setOffline() {
+      if (currentState === 'offline') return;
+      currentState = 'offline';
+      bulb.className  = 'bulb offline';
+      ring.className  = 'ring pulse-red';
+      label.className = 'status-label offline';
+      iconWifi.style.display = 'none';
+      iconOff.style.display  = '';
+      label.textContent  = 'Offline';
+      detail.textContent = 'No internet detected';
+      detail.style.color = '#ef4444';
+      pingText.textContent = `No response — ${ts()}`;
+      updateTitle(false);
+      addLog('Internet: connection lost', 'dot-red');
+    }
+
+    async function probe() {
+      const start = Date.now();
+      try {
+        await fetch(`https://www.gstatic.com/generate_204?_=${start}`, {
+          method: 'HEAD', cache: 'no-store', mode: 'no-cors'
+        });
+        const lat = Date.now() - start;
+        setOnline(lat);
+        if (currentState === 'online') pingText.textContent = `Last ping: ${lat}ms — ${ts()}`;
+      } catch {
+        if (!navigator.onLine) { setOffline(); }
+        else { setOnline(Date.now() - start); }
+      }
+      clearTimeout(probeTimer);
+      probeTimer = setTimeout(probe, currentState === 'online' ? 5000 : 3000);
+    }
+
+    window.addEventListener('online',  () => { addLog('Browser: online event', 'dot-green');  probe(); });
+    window.addEventListener('offline', () => { addLog('Browser: offline event', 'dot-red'); setOffline(); });
+
+    probe();
+
+    // ── Service checkers ──
+
+    const SERVICES = {
+      telegram: {
+        // Telegram's web endpoint — mode no-cors so it always "succeeds" if reachable
+        url:      'https://web.telegram.org/favicon.ico',
+        dotClass: 'dot-blue',
+        label:    'Telegram',
+      },
+      yandex: {
+        url:      'https://yandex.ru/favicon.ico',
+        dotClass: 'dot-red2',
+        label:    'Yandex',
+      }
+    };
+
+    const svcState  = { telegram: null, yandex: null };
+    const svcTimers = { telegram: null, yandex: null };
+
+    function setSvcOnline(id, latency) {
+      const prev = svcState[id];
+      svcState[id] = 'online';
+
+      document.getElementById(`svc-bulb-${id}`).className  = 'svc-bulb online';
+      document.getElementById(`svc-ring-${id}`).className  = 'svc-ring pulse-green';
+      const st = document.getElementById(`svc-status-${id}`);
+      st.className   = 'svc-status online';
+      st.textContent = latency ? `${latency}ms` : 'ok';
+
+      if (prev !== 'online') addLog(`${SERVICES[id].label}: reachable (${latency}ms)`, SERVICES[id].dotClass);
+    }
+
+    function setSvcOffline(id) {
+      const prev = svcState[id];
+      svcState[id] = 'offline';
+
+      document.getElementById(`svc-bulb-${id}`).className  = 'svc-bulb offline';
+      document.getElementById(`svc-ring-${id}`).className  = 'svc-ring pulse-red';
+      const st = document.getElementById(`svc-status-${id}`);
+      st.className   = 'svc-status offline';
+      st.textContent = 'blocked';
+
+      if (prev !== 'offline') addLog(`${SERVICES[id].label}: not reachable`, 'dot-red');
+    }
+
+    async function probeService(id) {
+      const svc   = SERVICES[id];
+      const start = Date.now();
+
+      // Only show checking state on very first probe (no flicker at fast intervals)
+      if (svcState[id] === null) {
+        document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb checking';
+      }
+
+      try {
+        await fetch(`${svc.url}?_=${start}`, {
+          method: 'GET', cache: 'no-store', mode: 'no-cors'
+        });
+        // no-cors opaque response — if we get here the host was reachable
+        const lat = Date.now() - start;
+        setSvcOnline(id, lat);
+      } catch {
+        // Network error = blocked or no connectivity
+        setSvcOffline(id);
+      }
+
+      clearTimeout(svcTimers[id]);
+      svcTimers[id] = setTimeout(() => probeService(id), svcState[id] === 'online' ? 1500 : 1000);
+    }
+
+    // Auto-start both service probes
+    probeService('telegram');
+    probeService('yandex');
+  </script>
+</body>
+</html>
