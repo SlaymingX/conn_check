@@ -1,2247 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>FitFriend</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#080b10">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FitFriend">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#080b10;min-height:100vh}
-body{color:#d4edd8;font-family:'DM Mono',monospace;padding-bottom:80px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connection Status</title>
 
-/* ---- HEADER ---- */
-.header{padding:36px 24px 18px;border-bottom:1px solid rgba(120,220,140,.12);position:relative;overflow:hidden}
-.header::before{content:'';position:absolute;top:-60px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(80,200,100,.08) 0%,transparent 70%);pointer-events:none}
-.header-tag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#78dc8c;margin-bottom:6px;opacity:.7}
-.header h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#e8f5ea;line-height:1.1}
-.header h1 span{color:#78dc8c}
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ConnCheck" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
 
-/* ---- TAB BAR ---- */
-.tab-bar{display:flex;gap:0;margin:0 16px;margin-top:14px;background:rgba(255,255,255,.025);border:1px solid rgba(120,220,140,.1);border-radius:12px;overflow:hidden}
-.tab-btn{flex:1;padding:11px 8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.5px;background:none;border:none;color:rgba(180,220,185,.45);cursor:pointer;transition:all .2s;position:relative}
-.tab-btn.active{background:rgba(120,220,140,.1);color:#78dc8c}
-.tab-btn.active::after{content:'';position:absolute;bottom:0;left:10%;width:80%;height:2px;background:#78dc8c;border-radius:2px 2px 0 0}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ---- TAB PANELS ---- */
-.tab-panel{display:none}
-.tab-panel.active{display:block}
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #888;
+      --text-muted: #555;
+      --green: #16a34a;
+      --green-glow: #22c55e;
+      --red: #dc2626;
+      --red-glow: #ef4444;
+    }
 
-/* ---- SYNC BAR ---- */
-.sync-bar{display:flex;align-items:center;gap:10px;margin:14px 16px 0;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(120,220,140,.12);border-radius:12px;font-size:12px}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;transition:background .3s}
-.sync-dot.ok{background:#78dc8c}
-.sync-dot.busy{background:#f0c060;animation:pulse 1s infinite}
-.sync-dot.err{background:#e07070}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.sync-label{flex:1;color:rgba(180,220,185,.6)}
-.btn-sync{background:none;border:1px solid rgba(120,220,140,.25);color:#78dc8c;border-radius:7px;padding:5px 11px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap}
-.btn-sync:hover{background:rgba(120,220,140,.08)}
-.btn-sync:disabled{opacity:.4;cursor:default}
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
 
-/* ---- SETUP PANEL ---- */
-.setup-panel{margin:14px 16px 0;padding:18px;background:rgba(120,220,140,.04);border:1px solid rgba(120,220,140,.2);border-radius:16px}
-.setup-panel h2{font-family:'Syne',sans-serif;font-size:16px;color:#78dc8c;margin-bottom:4px}
-.setup-panel p{font-size:12px;color:rgba(180,220,185,.55);margin-bottom:14px;line-height:1.6}
-.setup-steps{margin-bottom:16px;counter-reset:step;list-style:none}
-.setup-steps li{font-size:11px;color:rgba(180,220,185,.5);margin-bottom:6px;padding-left:16px;position:relative;line-height:1.5}
-.setup-steps li::before{content:counter(step);counter-increment:step;position:absolute;left:0;color:#78dc8c;font-weight:700}
-.setup-input{width:100%;background:rgba(120,220,140,.06);border:1px solid rgba(120,220,140,.22);border-radius:10px;color:#d4edd8;padding:11px 14px;font-family:'DM Mono',monospace;font-size:13px;outline:none;margin-bottom:10px}
-.setup-input:focus{border-color:#78dc8c}
-.setup-input::placeholder{color:rgba(180,220,185,.3)}
-.btn-connect{width:100%;background:linear-gradient(135deg,#3cb862,#2a9446);border:none;border-radius:10px;color:#fff;padding:13px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+    /* ── Main lamp ── */
+    .lamp-shell {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* ---- SECTIONS ---- */
-.section{margin:16px 16px 0;background:rgba(255,255,255,.03);border:1px solid rgba(120,220,140,.1);border-radius:16px;padding:18px;position:relative}
-.sec-label{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78dc8c;margin-bottom:14px;opacity:.8}
-.row{display:flex;gap:10px;align-items:center}
+    .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
 
-input[type=date],input[type=number],input[type=text]{
-  background:rgba(120,220,140,.06);border:1px solid rgba(120,220,140,.22);border-radius:10px;
-  color:#d4edd8;padding:13px 14px;font-family:'DM Mono',monospace;font-size:15px;
-  flex:1;outline:none;color-scheme:dark;-webkit-appearance:none;appearance:none;width:100%
-}
-input:focus{border-color:#78dc8c}
-input::placeholder{color:rgba(180,220,185,.3)}
+    .ring.pulse-green { animation: ripple-green 1.8s ease-out infinite; border-color: rgba(34,197,94,0.35); }
+    .ring.pulse-red   { animation: ripple-red 1s ease-out infinite;     border-color: rgba(239,68,68,0.4); }
 
-.btn{border:none;border-radius:10px;color:#fff;padding:13px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-.btn-green{background:linear-gradient(135deg,#3cb862,#2a9446)}
-.btn-amber{background:linear-gradient(135deg,#c4903a,#a06820)}
-.btn-ghost{background:none;border:1px solid rgba(120,220,140,.3);color:#78dc8c;border-radius:8px;padding:13px 14px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
-.btn-edit{position:absolute;top:16px;right:16px;background:none;border:1px solid rgba(220,80,80,.3);color:rgba(220,80,80,.6);border-radius:8px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px}
-.btn-edit.on{background:rgba(220,80,80,.15);color:#e06060;border-color:rgba(220,80,80,.6)}
-.btn-del{background:none;border:1px solid rgba(220,80,80,.3);color:rgba(220,80,80,.6);border-radius:6px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;font-family:monospace}
+    @keyframes ripple-green { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+    @keyframes ripple-red   { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
-.big-num{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;line-height:1}
-.big-unit{font-size:15px;opacity:.7;margin-left:4px}
-.big-row{display:flex;align-items:baseline;margin-bottom:14px}
-.hint{font-size:11px;color:rgba(180,220,185,.4);margin-bottom:12px}
+    .bulb {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      transition: background 0.4s ease;
+    }
 
-/* ---- CALORIES INPUT WRAP (for suggestions) ---- */
-.cal-input-wrap{position:relative;flex:1}
-.cal-input-wrap input{width:100%}
+    .bulb svg { width: 52px; height: 52px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---- AUTOCOMPLETE SUGGESTIONS ---- */
-.suggestions{
-  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
-  background:#0d1a10;border:1px solid rgba(120,220,140,.22);border-radius:10px;
-  overflow:hidden;display:none;
-}
-.sug-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 14px;cursor:pointer;gap:10px;
-  transition:background .12s;
-}
-.sug-item:not(:last-child){border-bottom:1px solid rgba(120,220,140,.07)}
-.sug-item:hover,.sug-item.focused{background:rgba(120,220,140,.1)}
-.sug-name{font-size:13px;color:#d4edd8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sug-name em{color:#78dc8c;font-style:normal;font-weight:700}
-.sug-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0}
-.sug-kcal{font-size:13px;color:#f0c060;font-weight:500}
-.sug-cat{font-size:10px;color:rgba(180,220,185,.35);letter-spacing:.5px}
-.sug-more{padding:8px 14px;font-size:10px;color:rgba(120,220,140,.4);letter-spacing:1px;text-align:center;cursor:pointer;border-top:1px solid rgba(120,220,140,.07)}
-.sug-more:hover{background:rgba(120,220,140,.05);color:#78dc8c}
+    .bulb.online   { background: var(--green); }
+    .bulb.offline  { background: var(--red); }
+    .bulb.checking { background: #222; border: 2px solid #333; }
 
-.entries{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:230px;overflow-y:auto}
-.entry{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(120,220,140,.08);border-radius:9px;padding:10px 12px}
-.entry-left{display:flex;flex-direction:column;gap:2px}
-.entry-time{color:rgba(180,220,185,.4);font-size:10px}
-.entry-val{font-size:15px;font-weight:500}
+    /* ── Status text ── */
+    .status-label {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .status-label.online   { color: var(--green-glow); }
+    .status-label.offline  { color: var(--red-glow); }
+    .status-label.checking { color: var(--text-secondary); }
 
-.divider{border-top:1px solid rgba(120,220,140,.08);margin-top:16px;padding-top:14px}
-.sub-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(120,220,140,.5);margin-bottom:10px}
-.chart-box{height:180px;margin-top:4px}
-.no-data{height:90px;display:flex;align-items:center;justify-content:center;color:rgba(180,220,185,.22);font-size:12px;letter-spacing:1px}
+    .detail {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      min-height: 1.4em;
+      transition: color 0.3s;
+    }
 
-.log-list{display:flex;flex-direction:column;gap:6px;max-height:190px;overflow-y:auto}
-.log-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(120,220,140,.08);border-radius:8px;font-size:13px}
-.log-date{color:rgba(180,220,185,.5)}
-.log-val{color:#78dc8c;font-weight:500}
-.badge{background:rgba(120,220,140,.12);color:#78dc8c;border-radius:4px;padding:2px 6px;font-size:10px;margin-left:6px}
+    /* ── Ping row ── */
+    .ping-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .ping-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
 
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.stat{background:rgba(255,255,255,.025);border:1px solid rgba(120,220,140,.08);border-radius:10px;padding:12px}
-.stat-l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,220,185,.4);margin-bottom:4px}
-.stat-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#78dc8c}
-.stat-v.amber{color:#f0c060}.stat-v.red{color:#e07070}.stat-v.muted{color:#9ecba5}
+    /* ── Service buttons ── */
+    .services {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+    }
 
-/* ======================================================
-   FOOD DATABASE TAB
-   ====================================================== */
-.fd-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.fd-title{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78dc8c;opacity:.8}
-.btn-add-cat{background:rgba(120,220,140,.08);border:1px solid rgba(120,220,140,.22);color:#78dc8c;border-radius:8px;padding:7px 13px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap}
-.btn-add-cat:hover{background:rgba(120,220,140,.16)}
+    .svc-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-/* category accordion */
-.cat-block{margin-bottom:10px;border:1px solid rgba(120,220,140,.1);border-radius:12px;overflow:hidden}
-.cat-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;cursor:pointer;background:rgba(120,220,140,.04);user-select:none}
-.cat-head:hover{background:rgba(120,220,140,.08)}
-.cat-name{font-family:'Syne',sans-serif;font-size:14px;color:#d4edd8}
-.cat-meta{display:flex;align-items:center;gap:10px}
-.cat-count{font-size:10px;color:rgba(120,220,140,.5);letter-spacing:.5px}
-.cat-chevron{font-size:12px;color:rgba(120,220,140,.4);transition:transform .2s}
-.cat-block.open .cat-chevron{transform:rotate(180deg)}
-.cat-body{display:none;padding:0 0 8px}
-.cat-block.open .cat-body{display:block}
+    .svc-shell {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* food items table */
-.food-table{width:100%;border-collapse:collapse;font-size:12px}
-.food-table th{padding:7px 10px;text-align:left;color:rgba(120,220,140,.45);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid rgba(120,220,140,.08);font-weight:400}
-.food-table td{padding:9px 10px;border-bottom:1px solid rgba(120,220,140,.05);color:#c8e8cc;vertical-align:middle}
-.food-table tr:last-child td{border-bottom:none}
-.food-table tr:hover td{background:rgba(120,220,140,.03)}
-.td-name{color:#d4edd8}
-.td-kcal{color:#f0c060;font-weight:500}
-.td-portion{color:#78dc8c;font-weight:600}
-.td-del{text-align:right}
-.btn-row-del{background:none;border:none;color:rgba(220,80,80,.4);cursor:pointer;font-size:14px;padding:2px 6px;font-family:monospace;border-radius:5px}
-.btn-row-del:hover{color:#e07070;background:rgba(220,80,80,.1)}
+    .svc-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      pointer-events: none;
+    }
+    .svc-ring.pulse-green { animation: ripple-green-s 1.8s ease-out infinite; border-color: rgba(34,197,94,0.35); }
+    .svc-ring.pulse-red   { animation: ripple-red-s   1s ease-out infinite;   border-color: rgba(239,68,68,0.4); }
 
-/* add food form inside category */
-.add-food-form{
-  display:none;margin:6px 10px 4px;padding:12px;
-  background:rgba(120,220,140,.03);border:1px solid rgba(120,220,140,.12);border-radius:10px;
-}
-.cat-block.adding .add-food-form{display:block}
-.add-food-form .form-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
-.add-food-form input[type=text],
-.add-food-form input[type=number]{
-  font-size:13px;padding:10px 12px;
-}
-.inp-name{flex:2;min-width:100px}
-.inp-small{flex:1;min-width:60px}
-.inp-portion{flex:1;min-width:80px;background:rgba(120,220,140,.04)!important;border-color:rgba(120,220,140,.15)!important;color:#78dc8c!important;font-size:12px!important}
-.form-actions{display:flex;gap:8px;justify-content:flex-end}
-.btn-save-food{background:linear-gradient(135deg,#3cb862,#2a9446);border:none;border-radius:8px;color:#fff;padding:9px 16px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
-.btn-cancel-food{background:none;border:1px solid rgba(180,220,185,.15);color:rgba(180,220,185,.5);border-radius:8px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
-.btn-add-food{display:flex;align-items:center;gap:6px;margin:4px 10px 4px;padding:8px 12px;background:none;border:1px dashed rgba(120,220,140,.18);color:rgba(120,220,140,.5);border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;width:calc(100% - 20px)}
-.btn-add-food:hover{border-color:rgba(120,220,140,.35);color:#78dc8c;background:rgba(120,220,140,.04)}
+    @keyframes ripple-green-s { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.65); opacity: 0; } }
+    @keyframes ripple-red-s   { 0% { transform: scale(1);   opacity: 1; } 100% { transform: scale(1.55); opacity: 0; } }
 
-/* add category modal overlay */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:#0d1a10;border:1px solid rgba(120,220,140,.22);border-radius:16px;padding:22px;width:calc(100% - 48px);max-width:360px}
-.modal h3{font-family:'Syne',sans-serif;font-size:16px;color:#78dc8c;margin-bottom:14px}
-.modal input{width:100%;margin-bottom:12px}
-.modal-btns{display:flex;gap:10px}
-.modal-btns .btn{flex:1;padding:12px}
+    .svc-bulb {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.4s ease, transform 0.15s ease;
+      z-index: 1;
+      position: relative;
+    }
 
-/* empty state */
-.empty-state{padding:40px 20px;text-align:center;color:rgba(180,220,185,.25);font-size:13px;line-height:2}
-.empty-icon{font-size:32px;display:block;margin-bottom:8px;opacity:.5}
+    .svc-btn:active .svc-bulb { transform: scale(0.95); }
+    .svc-bulb svg { width: 28px; height: 28px; }
 
+    .svc-bulb.online   { background: var(--green); }
+    .svc-bulb.offline  { background: var(--red); }
+    .svc-bulb.checking { background: #222; border: 2px solid #333; }
 
-/* ---- DATE NAV BAR ---- */
-.date-nav{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.date-nav-btn{background:none;border:1px solid rgba(120,220,140,.22);color:#78dc8c;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:background .15s}
-.date-nav-btn:hover{background:rgba(120,220,140,.1)}
-.date-nav-btn:active{background:rgba(120,220,140,.18)}
-.date-nav-center{display:flex;align-items:center;gap:8px;flex:1;justify-content:center}
-.date-nav-center input[type=date]{flex:none;width:auto;min-width:0;text-align:center;padding:10px 10px;font-size:14px}
-.btn-today{padding:9px 13px;font-size:11px;white-space:nowrap}
+    .svc-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .svc-status {
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      min-height: 1.2em;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .svc-status.online  { color: var(--green-glow); }
+    .svc-status.offline { color: var(--red-glow); }
 
-/* ---- LATE NIGHT BANNER ---- */
-.late-banner{
-  display:none;margin:14px 16px 0;padding:13px 18px;
-  background:rgba(200,50,50,.12);border:1px solid rgba(220,80,80,.3);border-radius:12px;
-  display:flex;align-items:center;gap:10px;
-}
-.late-banner.hidden{display:none!important}
-.late-banner-icon{font-size:18px;flex-shrink:0}
-.late-banner-text{font-size:12px;color:#e08888;line-height:1.5}
-.late-banner-text b{color:#f09090;font-size:13px;display:block;margin-bottom:2px}
+    /* ── Log ── */
+    .log {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .log-header {
+      background: var(--surface);
+      padding: 8px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-entries {
+      max-height: 140px;
+      overflow-y: auto;
+      background: #111;
+    }
+    .log-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      font-size: 11px;
+      border-bottom: 1px solid #1a1a1a;
+      text-align: left;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+    .dot-blue  { background: #38bdf8; }
+    .dot-red2  { background: #f87171; }
+    .dot-gray  { background: #444; }
+    .log-entry .ts  { color: #444; flex-shrink: 0; }
+    .log-entry .msg { color: #bbb; flex: 1; }
 
-/* ---- GOAL BOX ---- */
-.goal-box{
-  margin-top:14px;padding:14px;
-  background:rgba(120,220,140,.03);border:1px solid rgba(120,220,140,.12);border-radius:12px;
-}
-.goal-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.goal-row input{flex:1;padding:10px 12px;font-size:14px}
-.goal-row label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(120,220,140,.5);white-space:nowrap}
-.btn-set-goal{background:rgba(120,220,140,.1);border:1px solid rgba(120,220,140,.3);color:#78dc8c;border-radius:8px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap}
-.btn-set-goal:hover{background:rgba(120,220,140,.18)}
-.goal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.goal-stat{background:rgba(255,255,255,.02);border:1px solid rgba(120,220,140,.07);border-radius:9px;padding:10px 12px}
-.goal-stat-l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,220,185,.35);margin-bottom:3px}
-.goal-stat-v{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#78dc8c}
-.goal-stat-v.amber{color:#f0c060}
-.goal-stat-v.muted{color:rgba(180,220,185,.4)}
-.goal-progress{margin-top:10px;height:6px;background:rgba(120,220,140,.08);border-radius:3px;overflow:hidden}
-.goal-progress-bar{height:100%;background:linear-gradient(90deg,#3cb862,#78dc8c);border-radius:3px;transition:width .4s}
-.goal-empty{font-size:11px;color:rgba(180,220,185,.3);text-align:center;padding:4px 0;letter-spacing:.5px}
-
-
-/* ======================================================
-   HISTORY TAB
-   ====================================================== */
-.hist-section{margin:16px 16px 0;background:rgba(255,255,255,.03);border:1px solid rgba(120,220,140,.1);border-radius:16px;padding:18px}
-.hist-sec-label{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78dc8c;margin-bottom:14px;opacity:.8}
-
-/* period form */
-.period-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.period-field label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(120,220,140,.45);margin-bottom:5px}
-.period-field input{width:100%;padding:10px 12px;font-size:13px}
-.period-weights{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.period-weights label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(120,220,140,.45);margin-bottom:5px}
-.period-weights input{width:100%;padding:10px 12px;font-size:13px}
-.btn-add-period{width:100%;background:linear-gradient(135deg,#3cb862,#2a9446);border:none;border-radius:10px;color:#fff;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
-
-/* history cards */
-.hist-card{margin-bottom:10px;border:1px solid rgba(120,220,140,.1);border-radius:14px;overflow:hidden;position:relative}
-.hist-card-head{padding:14px 16px 10px;background:rgba(120,220,140,.04)}
-.hist-card-dates{font-family:'Syne',sans-serif;font-size:13px;color:#d4edd8;margin-bottom:2px}
-.hist-card-sub{font-size:10px;color:rgba(120,220,140,.45);letter-spacing:.5px}
-.hist-card-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(120,220,140,.07)}
-.hist-stat{background:#080b10;padding:11px 10px;text-align:center}
-.hist-stat-l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(180,220,185,.35);margin-bottom:3px}
-.hist-stat-v{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#78dc8c}
-.hist-stat-v.red{color:#e07070}
-.hist-stat-v.amber{color:#f0c060}
-.hist-card-chart{height:100px;padding:10px 12px 6px;background:#080b10}
-.hist-card-del{position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(220,80,80,.4);cursor:pointer;font-size:15px;font-family:monospace;padding:2px 6px;border-radius:5px}
-.hist-card-del:hover{color:#e07070;background:rgba(220,80,80,.1)}
-.hist-empty{padding:36px 20px;text-align:center;color:rgba(180,220,185,.22);font-size:12px;line-height:2}
-.hist-empty-icon{font-size:30px;display:block;margin-bottom:8px;opacity:.4}
-
-/* summary strip */
-.hist-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
-.hist-sum-stat{background:rgba(255,255,255,.02);border:1px solid rgba(120,220,140,.07);border-radius:10px;padding:11px 13px}
-.hist-sum-l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(180,220,185,.35);margin-bottom:3px}
-.hist-sum-v{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#78dc8c}
-
-
-/* ---- INLINE EDIT ---- */
-.editable{cursor:text;border-radius:4px;transition:background .15s;padding:1px 4px;margin:-1px -4px}
-.editable:hover{background:rgba(120,220,140,.08)}
-.editable:hover::after{content:' ✎';font-size:10px;color:rgba(120,220,140,.4);margin-left:4px}
-.inline-edit-input{
-  background:rgba(120,220,140,.08);border:1px solid rgba(120,220,140,.35);border-radius:6px;
-  color:#d4edd8;font-family:'DM Mono',monospace;outline:none;
-  padding:2px 8px;
-}
-.inline-edit-input.cat-edit{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;min-width:120px}
-.inline-edit-input.item-edit{font-size:12px;min-width:80px}
-
-
-/* ======================================================
-   PERIODS (History tab redesign)
-   ====================================================== */
-
-/* active period banner on tracker */
-.active-period-bar{
-  display:none;margin:10px 16px 0;padding:11px 16px;
-  background:rgba(120,220,140,.07);border:1px solid rgba(120,220,140,.25);border-radius:12px;
-  font-size:12px;display:flex;align-items:center;gap:10px;
-}
-.active-period-bar.hidden{display:none!important}
-.apb-dot{width:7px;height:7px;border-radius:50%;background:#78dc8c;flex-shrink:0;animation:pulse 2s infinite}
-.apb-text{flex:1;color:rgba(180,220,185,.7)}
-.apb-text b{color:#78dc8c}
-.apb-clear{background:none;border:1px solid rgba(120,220,140,.2);color:rgba(120,220,140,.5);border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap}
-.apb-clear:hover{color:#78dc8c;border-color:rgba(120,220,140,.5)}
-
-/* period card */
-.period-card{
-  margin-bottom:10px;border:1px solid rgba(120,220,140,.1);border-radius:14px;overflow:hidden;
-  transition:border-color .2s;
-}
-.period-card.is-current{border-color:rgba(120,220,140,.35)}
-.period-card.is-viewing{border-color:#78dc8c;box-shadow:0 0 0 1px rgba(120,220,140,.15)}
-.period-card-head{
-  padding:13px 16px;background:rgba(120,220,140,.04);
-  display:flex;align-items:flex-start;gap:10px;
-}
-.period-card.is-current .period-card-head{background:rgba(120,220,140,.07)}
-.period-card.is-viewing .period-card-head{background:rgba(120,220,140,.1)}
-.period-card-info{flex:1;min-width:0}
-.period-card-name{
-  font-family:'Syne',sans-serif;font-size:14px;color:#d4edd8;margin-bottom:3px;
-  cursor:text;border-radius:4px;display:inline-block;
-}
-.period-card-name:hover{background:rgba(120,220,140,.08)}
-.period-card-name:hover::after{content:' ✎';font-size:10px;color:rgba(120,220,140,.35)}
-.period-card-dates{font-size:11px;color:rgba(120,220,140,.5);letter-spacing:.3px}
-.period-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.pbadge{
-  font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;font-weight:600;
-}
-.pbadge-current{background:rgba(120,220,140,.15);color:#78dc8c;border:1px solid rgba(120,220,140,.3)}
-.pbadge-done{background:rgba(180,220,185,.07);color:rgba(180,220,185,.4);border:1px solid rgba(180,220,185,.12)}
-.pbadge-viewing{background:rgba(120,220,140,.2);color:#78dc8c;border:1px solid rgba(120,220,140,.4)}
-
-/* card action buttons */
-.period-card-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
-.btn-pact{
-  background:none;border:1px solid rgba(120,220,140,.18);color:rgba(120,220,140,.6);
-  border-radius:7px;padding:5px 10px;font-family:'DM Mono',monospace;font-size:10px;
-  cursor:pointer;white-space:nowrap;letter-spacing:.3px;
-}
-.btn-pact:hover{background:rgba(120,220,140,.1);color:#78dc8c}
-.btn-pact.danger{border-color:rgba(220,80,80,.25);color:rgba(220,80,80,.5)}
-.btn-pact.danger:hover{background:rgba(220,80,80,.08);color:#e07070}
-.btn-pact.primary{background:rgba(120,220,140,.12);border-color:rgba(120,220,140,.3);color:#78dc8c}
-.btn-pact.primary:hover{background:rgba(120,220,140,.2)}
-.btn-pact.viewing-on{background:rgba(120,220,140,.2);border-color:#78dc8c;color:#78dc8c}
-
-/* period stats strip */
-.period-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(120,220,140,.06)}
-.period-stat{background:#080b10;padding:10px;text-align:center}
-.period-stat-l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(180,220,185,.3);margin-bottom:2px}
-.period-stat-v{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#78dc8c}
-.period-stat-v.amber{color:#f0c060}
-.period-stat-v.muted{color:rgba(180,220,185,.35)}
-
-/* period mini chart */
-.period-chart-wrap{height:90px;padding:8px 12px 6px;background:#080b10;border-top:1px solid rgba(120,220,140,.06)}
-
-/* edit period modal */
-.period-modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
-  align-items:center;justify-content:center;padding:20px;
-}
-.period-modal-overlay.open{display:flex}
-.period-modal{
-  background:#0d1a10;border:1px solid rgba(120,220,140,.22);border-radius:16px;
-  padding:22px;width:100%;max-width:380px;
-}
-.period-modal h3{font-family:'Syne',sans-serif;font-size:16px;color:#78dc8c;margin-bottom:16px}
-.pm-field{margin-bottom:12px}
-.pm-field label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(120,220,140,.45);margin-bottom:5px}
-.pm-field input{width:100%;padding:10px 12px;font-size:13px}
-.pm-check{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer}
-.pm-check input[type=checkbox]{width:16px;height:16px;accent-color:#78dc8c;cursor:pointer}
-.pm-check span{font-size:12px;color:rgba(180,220,185,.6)}
-.pm-btns{display:flex;gap:10px}
-.pm-btns .btn{flex:1;padding:12px}
-
-/* no periods empty */
-.periods-empty{padding:36px 20px;text-align:center;color:rgba(180,220,185,.22);font-size:12px;line-height:2}
-.periods-empty-icon{font-size:30px;display:block;margin-bottom:8px;opacity:.4}
-
-
-/* ---- NOTES BAR ---- */
-.notes-wrap{margin-top:14px}
-.notes-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(120,220,140,.45);margin-bottom:6px}
-.notes-textarea{
-  width:100%;min-height:60px;resize:vertical;
-  background:rgba(120,220,140,.04);border:1px solid rgba(120,220,140,.14);border-radius:10px;
-  color:#c8e8cc;font-family:'DM Mono',monospace;font-size:12px;line-height:1.6;
-  padding:10px 12px;outline:none;transition:border-color .2s;
-}
-.notes-textarea:focus{border-color:rgba(120,220,140,.35)}
-.notes-textarea::placeholder{color:rgba(180,220,185,.2)}
-.notes-saved-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#78dc8c;margin-left:6px;opacity:0;transition:opacity .3s;vertical-align:middle}
-.notes-saved-dot.show{opacity:1}
-
-/* ---- HISTORY: COMPARISON CHART ---- */
-.hist-compare-wrap{
-  margin:0 16px 10px;background:rgba(255,255,255,.03);
-  border:1px solid rgba(120,220,140,.1);border-radius:16px;overflow:hidden;
-}
-.hist-compare-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px}
-.hist-compare-title{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78dc8c;opacity:.8}
-.hist-compare-legend{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px}
-.hcl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(180,220,185,.55)}
-.hcl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.hist-compare-chart{height:200px;padding:0 12px 12px}
-.hist-compare-empty{padding:24px;text-align:center;color:rgba(180,220,185,.22);font-size:12px}
-
-/* flash */
-#flash{display:none;position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#0f1f14;border:1px solid #78dc8c;color:#78dc8c;padding:10px 22px;border-radius:30px;font-size:13px;z-index:999;white-space:nowrap;transition:opacity .2s}
-#flash.err{border-color:#e07070;color:#e07070;background:#1f0f0f}
-</style>
+    .log-entries::-webkit-scrollbar { width: 4px; }
+    .log-entries::-webkit-scrollbar-track { background: transparent; }
+    .log-entries::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  </style>
 </head>
 <body>
 
-<div id="flash"></div>
-
-<!-- ADD CATEGORY MODAL -->
-<div class="modal-overlay" id="catModal">
-  <div class="modal">
-    <h3>New Category</h3>
-    <input type="text" id="catNameInput" placeholder="e.g. KFC, Home Food, Café…" maxlength="40" autocomplete="off"/>
-    <div class="modal-btns">
-      <button class="btn" style="background:none;border:1px solid rgba(180,220,185,.15);color:rgba(180,220,185,.5)" onclick="closeCatModal()">Cancel</button>
-      <button class="btn btn-green" onclick="confirmAddCat()">Add</button>
-    </div>
-  </div>
-</div>
-
-<div class="header">
-  <div class="header-tag">Body Metrics</div>
-  <h1>Weight<br><span>Tracker</span></h1>
-</div>
-
-<!-- TAB BAR -->
-<div class="tab-bar">
-  <button class="tab-btn active" id="tab-tracker" onclick="switchTab('tracker')">📊 Tracker</button>
-  <button class="tab-btn"        id="tab-food"    onclick="switchTab('food')">🍽 Food DB</button>
-  <button class="tab-btn"        id="tab-history" onclick="switchTab('history')">📉 History</button>
-</div>
-
-<!-- SYNC STATUS BAR -->
-<div class="sync-bar" id="syncBar">
-  <div class="sync-dot" id="syncDot"></div>
-  <span class="sync-label" id="syncLabel">Not connected to Google Drive</span>
-  <button class="btn-sync" id="syncBtn" onclick="handleSyncBtn()">Connect</button>
-  <button class="btn-sync" id="signOutBtn" onclick="signOut()" style="display:none;border-color:rgba(220,80,80,.3);color:rgba(220,100,100,.7)">Sign out</button>
-</div>
-
-<!-- SETUP PANEL -->
-<div class="setup-panel" id="setupPanel">
-  <h2>📁 Google Drive Sync</h2>
-  <p>Your data will be saved to <b>weight-tracker-data.json</b> in your Google Drive — accessible from any device.</p>
-  <ol class="setup-steps">
-    <li>Go to <b>console.cloud.google.com</b> and create a project.</li>
-    <li>Enable <b>Google Drive API</b>.</li>
-    <li>Create an <b>OAuth 2.0 Client ID</b> (Web application).<br>Add this page's URL as an Authorized JavaScript origin.</li>
-    <li>Copy the <b>Client ID</b> and paste it below.</li>
-  </ol>
-  <input class="setup-input" id="clientIdInput" placeholder="Paste your Google OAuth Client ID here…" autocomplete="off"/>
-  <button class="btn-connect" onclick="saveClientId()">Save & Connect</button>
-</div>
-
-<!-- ===================== TAB: TRACKER ===================== -->
-<div class="tab-panel active" id="panel-tracker">
-
-  <!-- ACTIVE PERIOD BANNER -->
-  <div class="active-period-bar hidden" id="activePeriodBar">
-    <div class="apb-dot"></div>
-    <span class="apb-text" id="apbText">Viewing period</span>
-    <button class="apb-clear" onclick="clearViewingPeriod()">✕ All data</button>
-  </div>
-
-  <!-- LATE NIGHT BANNER -->
-  <div class="late-banner hidden" id="lateBanner">
-    <span class="late-banner-icon">🌙</span>
-    <div class="late-banner-text">
-      <b>That's enough food for today.</b>
-      It's getting late — your body is winding down for the night.
+  <!-- Main internet bulb -->
+  <div class="lamp-shell">
+    <div class="ring" id="ring"></div>
+    <div class="bulb checking" id="bulb">
+      <svg id="bulb-icon-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#fff" stroke="none"/></svg>
+      <svg id="bulb-icon-off" viewBox="0 0 24 24" style="display:none;" stroke="#fff" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a11 11 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#fff" stroke="none"/></svg>
     </div>
   </div>
 
-  <!-- DATE -->
-  <div class="section">
-    <div class="sec-label">Selected Date</div>
-    <div class="date-nav">
-      <button class="date-nav-btn" onclick="shiftDay(-1)" title="Previous day">&#8249;</button>
-      <div class="date-nav-center">
-        <input type="date" id="datePicker"/>
-      </div>
-      <button class="date-nav-btn" onclick="shiftDay(1)" title="Next day">&#8250;</button>
-      <button class="btn-ghost btn-today" onclick="setToday()">Today</button>
-    </div>
+  <div>
+    <div class="status-label checking" id="status-label">Checking...</div>
+    <div class="detail" id="detail">Running network probe</div>
   </div>
 
-  <!-- CALORIES -->
-  <div class="section">
-    <div class="sec-label">Calories — <span id="calDateLabel"></span></div>
-    <div class="big-row">
-      <span class="big-num" id="calTotal">0</span>
-      <span class="big-unit" id="calUnit">kcal</span>
-    </div>
-    <div class="row">
-      <!-- input wrapped for suggestions dropdown -->
-      <div class="cal-input-wrap">
-        <input type="text" id="calInput" placeholder="Add kcal or type food name…"
-          autocomplete="off"
-          oninput="onCalInput(event)"
-          onkeydown="onCalKeydown(event)"
-          onblur="hideSuggestions()"
-        />
-        <div class="suggestions" id="sugBox"></div>
-      </div>
-      <button class="btn btn-amber" onclick="addCalories()">+ Add</button>
-    </div>
-    <ul class="entries" id="calEntries"></ul>
-    <div class="divider" id="calChartWrap" style="display:none">
-      <div class="sub-label">Calories Chart</div>
-      <div class="chart-box"><canvas id="calChart"></canvas></div>
-    </div>
+  <div class="ping-row">
+    <div class="ping-dot"></div>
+    <span id="ping-text">Probing network...</span>
   </div>
 
-  <!-- WEIGHT -->
-  <div class="section">
-    <button class="btn-edit" id="editBtn" onclick="toggleEdit()">✎ edit</button>
-    <div class="sec-label">Weight Log</div>
-    <div class="big-row" id="weightDisplay" style="display:none">
-      <span class="big-num" id="weightBig" style="color:#78dc8c"></span>
-      <span class="big-unit" style="color:#6ba870">kg</span>
-    </div>
-    <div class="hint" id="weightHint"></div>
-    <div class="row">
-      <input type="number" id="weightInput" placeholder="e.g. 75.4" step="0.1" min="20" max="300"/>
-      <button class="btn btn-green" onclick="saveWeight()">Save kg</button>
-    </div>
-    <!-- NOTES BAR -->
-    <div class="notes-wrap">
-      <div class="notes-label">Notes <span class="notes-saved-dot" id="notesSavedDot"></span></div>
-      <textarea class="notes-textarea" id="notesInput" placeholder="Add a note for this date…" oninput="onNoteInput()" rows="2"></textarea>
-    </div>
-    <div class="stats-grid" id="statsGrid" style="display:none">
-      <div class="stat"><div class="stat-l">Starting</div><div class="stat-v muted" id="sStart"></div></div>
-      <div class="stat"><div class="stat-l">Change</div><div class="stat-v" id="sChange"></div></div>
-      <div class="stat"><div class="stat-l">Lowest</div><div class="stat-v" id="sLow"></div></div>
-      <div class="stat"><div class="stat-l">Entries</div><div class="stat-v muted" id="sCount"></div></div>
-    </div>
-    <!-- GOAL BOX -->
-    <div class="goal-box" id="goalBox">
-      <div class="goal-row">
-        <label>Goal&nbsp;kg</label>
-        <input type="number" id="goalInput" placeholder="e.g. 70.0" step="0.1" min="20" max="300"/>
-        <button class="btn-set-goal" onclick="setGoal()">Set</button>
-      </div>
-      <div id="goalContent"><div class="goal-empty">Set a desirable weight to see prediction.</div></div>
-    </div>
-
-    <div class="divider">
-      <div class="sub-label">Weight Chart</div>
-      <div id="weightChartWrap" style="display:none"><div class="chart-box"><canvas id="weightChart"></canvas></div></div>
-      <div class="no-data" id="weightNoData">Add 2+ entries to see your chart</div>
-    </div>
-    <div class="divider" id="logWrap" style="display:none">
-      <div class="sub-label">All Entries</div>
-      <div class="log-list" id="weightLog"></div>
-    </div>
-  </div>
-
-</div><!-- /panel-tracker -->
-
-<!-- ===================== TAB: FOOD DB ===================== -->
-<div class="tab-panel" id="panel-food">
-  <div class="section">
-    <div class="fd-header">
-      <span class="fd-title">Food Database</span>
-      <button class="btn-add-cat" onclick="openCatModal()">+ Category</button>
-    </div>
-    <div id="catList"></div>
-  </div>
-</div><!-- /panel-food -->
-
-<!-- PERIOD EDIT MODAL -->
-<div class="period-modal-overlay" id="periodModal">
-  <div class="period-modal">
-    <h3 id="pmTitle">New Period</h3>
-    <div class="pm-field">
-      <label>Period name</label>
-      <input type="text" id="pmName" placeholder="e.g. Summer Cut 2025" maxlength="50" autocomplete="off"/>
-    </div>
-    <div class="pm-field">
-      <label>Start date</label>
-      <input type="date" id="pmStart"/>
-    </div>
-    <div class="pm-check" onclick="togglePmCurrent()">
-      <input type="checkbox" id="pmCurrentCb"/>
-      <span>Current (ongoing — no end date yet)</span>
-    </div>
-    <div class="pm-field" id="pmEndWrap">
-      <label>End date</label>
-      <input type="date" id="pmEnd"/>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="pm-field" style="margin-bottom:0">
-        <label>Start weight (kg)</label>
-        <input type="number" id="pmStartW" placeholder="e.g. 85.0" step="0.1" min="20" max="300"/>
-      </div>
-      <div class="pm-field" id="pmEndWWrap" style="margin-bottom:0">
-        <label>End weight (kg)</label>
-        <input type="number" id="pmEndW" placeholder="e.g. 79.5" step="0.1" min="20" max="300"/>
-      </div>
-    </div>
-    <div class="pm-btns">
-      <button class="btn" style="background:none;border:1px solid rgba(180,220,185,.15);color:rgba(180,220,185,.5)" onclick="closePeriodModal()">Cancel</button>
-      <button class="btn btn-green" onclick="savePeriodModal()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== TAB: HISTORY ===================== -->
-<div class="tab-panel" id="panel-history">
-
-  <!-- COMPARISON CHART -->
-  <div class="hist-compare-wrap" id="histCompareWrap">
-    <div class="hist-compare-head">
-      <span class="hist-compare-title">All Periods — Compare</span>
-    </div>
-    <div class="hist-compare-legend" id="histCompareLegend"></div>
-    <div class="hist-compare-chart"><canvas id="histCompareChart"></canvas></div>
-  </div>
-
-  <!-- NEW PERIOD BUTTON -->
-  <div class="hist-section" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px">
-    <span class="hist-sec-label" style="margin-bottom:0">Periods</span>
-    <button class="btn-add-cat" onclick="openPeriodModal(null)">+ New Period</button>
-  </div>
-
-  <!-- PERIODS LIST -->
-  <div class="hist-section" style="padding-top:0;border-top:none;margin-top:0">
-    <div id="histList"></div>
-  </div>
-
-</div><!-- /panel-history -->
-
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<script>
-// ============================================================
-//  CONFIG
-// ============================================================
-const DATA_KEY   = 'wt_data_v1';
-const CLIENT_KEY = 'wt_goog_client_id';
-const FILE_KEY   = 'wt_drive_file_id';
-const HINT_KEY   = 'wt_goog_hint';
-const EMAIL_KEY  = 'wt_goog_email';   // stores confirmed email for One Tap hint
-const SCOPES     = 'https://www.googleapis.com/auth/drive.appdata';
-const DRIVE_API  = 'https://www.googleapis.com/drive/v3';
-const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
-const FILENAME   = 'weight-tracker-data.json';
-
-// ============================================================
-//  STATE
-// ============================================================
-let db = loadLocal(); // { weights:{}, calories:{}, food:{ categories:[{id,name}], items:[{id,catId,name,grams,kcalPer100}] } }
-let editMode  = false;
-let wChart    = null;
-let cChart    = null;
-let accessToken  = null;
-let driveFileId  = localStorage.getItem(FILE_KEY) || null;
-let isSyncing    = false;
-let tokenExpiry  = 0;      // ms timestamp when current accessToken expires
-let tokenRefreshTimer = null;
-// suggestion state
-let sugItems     = [];   // current visible suggestions
-let sugFocusIdx  = -1;   // keyboard focus index
-let sugExpanded  = false; // whether "show all" was clicked
-// active period filter
-let activePeriodId = localStorage.getItem('wt_active_period') ? parseInt(localStorage.getItem('wt_active_period')) : null;
-
-// ============================================================
-//  LOCAL STORAGE
-// ============================================================
-function loadLocal() {
-  try {
-    const d = JSON.parse(localStorage.getItem(DATA_KEY));
-    if (!d) return freshDb();
-    if (!d.food)    d.food    = { categories: [], items: [] };
-    if (!d.periods) d.periods = [];
-    if (!d.notes)   d.notes   = {};
-    return d;
-  } catch { return freshDb(); }
-}
-function freshDb() {
-  return { weights: {}, calories: {}, food: { categories: [], items: [] }, periods: [], notes: {} }; // notes: {date: string}, periods: [{id,name,start,end|null,startW,endW|null,current,done}]
-}
-function saveLocal() {
-  try { localStorage.setItem(DATA_KEY, JSON.stringify(db)); } catch {}
-}
-
-// ============================================================
-//  GOOGLE AUTH  — One Tap silent auto-login + token client
-//
-//  Flow:
-//   1. On page load: google.accounts.id.initialize() with auto_select:true
-//      Google silently checks its own session cookie and calls onOneTapCredential
-//      if the user already approved this app — NO popup shown.
-//   2. onOneTapCredential receives a JWT id_token. We extract the email/sub
-//      and use it as the hint for initTokenClient with prompt:'none' to get
-//      a Drive access token also silently.
-//   3. If One Tap has nothing (first visit, revoked, or 3rd-party cookies
-//      blocked), we fall back to the explicit token client (account chooser).
-//   4. Access token is refreshed automatically 5 min before expiry.
-// ============================================================
-function getClientId() { return localStorage.getItem(CLIENT_KEY) || ''; }
-
-function saveClientId() {
-  const val = document.getElementById('clientIdInput').value.trim();
-  if (!val || !val.includes('.apps.googleusercontent.com')) {
-    flash('Please paste a valid Google Client ID', true); return;
-  }
-  localStorage.setItem(CLIENT_KEY, val);
-  document.getElementById('setupPanel').style.display = 'none';
-  startAuth();
-}
-
-// ── Entry point on page load ─────────────────────────────────
-function startAuth() {
-  const clientId = getClientId();
-  if (!clientId) return;
-  const savedEmail = localStorage.getItem(EMAIL_KEY);
-
-  // Initialize One Tap for silent auto-login
-  google.accounts.id.initialize({
-    client_id:   clientId,
-    callback:    onOneTapCredential,
-    auto_select: true,          // silently selects the last-used account
-    cancel_on_tap_outside: false,
-    context: 'signin',
-    login_hint: savedEmail || undefined,
-  });
-
-  if (savedEmail) {
-    // We know who the user is — try to get a Drive token silently first
-    setSyncStatus('busy', 'Auto-connecting…');
-    requestDriveToken(savedEmail, /*silent=*/true);
-  } else {
-    // First visit — trigger One Tap (may show a small corner prompt or be invisible)
-    setSyncStatus('busy', 'Connecting…');
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // One Tap couldn't run (3rd-party cookies blocked, dismissed, etc.)
-        // Fall back to explicit token client
-        requestDriveToken(null, /*silent=*/false);
-      }
-    });
-  }
-}
-
-// ── Called by One Tap when it auto-selects an account ────────
-function onOneTapCredential(response) {
-  // Decode the JWT payload (we only need email/sub — no signature verification
-  // needed here since we immediately use it as a login_hint, not for auth)
-  try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    const email   = payload.email || payload.sub;
-    localStorage.setItem(EMAIL_KEY, email);
-    requestDriveToken(email, /*silent=*/true);
-  } catch(e) {
-    // Fallback: proceed without hint
-    requestDriveToken(null, /*silent=*/false);
-  }
-}
-
-// ── Request a Drive access token ─────────────────────────────
-function requestDriveToken(hint, silent) {
-  const clientId = getClientId();
-  if (!clientId) return;
-
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope:     SCOPES,
-    hint:      hint || undefined,
-    prompt:    silent ? 'none' : 'select_account',
-    callback:  (tr) => {
-      if (tr.error) {
-        if (silent) {
-          // Silent failed — try One Tap prompt, then explicit fallback
-          google.accounts.id.prompt((n) => {
-            if (n.isNotDisplayed() || n.isSkippedMoment()) {
-              // One Tap also failed — need explicit login
-              setSyncStatus('err', 'Tap "Connect" to sign in');
-              document.getElementById('syncBtn').textContent = 'Connect';
-            }
-            // else One Tap showed and will call onOneTapCredential
-          });
-          return;
-        }
-        setSyncStatus('err', 'Auth failed: ' + tr.error);
-        return;
-      }
-      // Success
-      accessToken = tr.access_token;
-      // Schedule proactive refresh 5 min before expiry (tokens last ~1 hour)
-      const expiresIn = (tr.expires_in || 3600) - 300;
-      clearTimeout(tokenRefreshTimer);
-      tokenRefreshTimer = setTimeout(() => refreshToken(), expiresIn * 1000);
-      setSyncStatus('busy', 'Loading from Drive…');
-      loadFromDrive();
-    },
-  });
-
-  if (silent) {
-    client.requestAccessToken({ prompt: 'none' });
-  } else {
-    client.requestAccessToken();
-  }
-}
-
-// ── Proactive silent token refresh before expiry ─────────────
-function refreshToken() {
-  const email = localStorage.getItem(EMAIL_KEY);
-  requestDriveToken(email, /*silent=*/true);
-}
-
-// ── Called when a 401 is received mid-session ────────────────
-function refreshTokenThenRetry() {
-  const clientId = getClientId();
-  if (!clientId) return;
-  const email = localStorage.getItem(EMAIL_KEY);
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: clientId, scope: SCOPES,
-    hint: email || undefined, prompt: 'none',
-    callback: (tr) => {
-      if (!tr.error) {
-        accessToken = tr.access_token;
-        const expiresIn = (tr.expires_in || 3600) - 300;
-        clearTimeout(tokenRefreshTimer);
-        tokenRefreshTimer = setTimeout(() => refreshToken(), expiresIn * 1000);
-        saveToDrive(); // retry
-      } else {
-        setSyncStatus('err', 'Session expired — tap Connect');
-        document.getElementById('syncBtn').textContent = 'Connect';
-      }
-    },
-  });
-  client.requestAccessToken({ prompt: 'none' });
-}
-
-function signOut() {
-  const tok = accessToken;
-  accessToken = null;
-  clearTimeout(tokenRefreshTimer);
-  localStorage.removeItem(HINT_KEY);
-  localStorage.removeItem(EMAIL_KEY);
-  google.accounts.id.disableAutoSelect();
-  if (tok) { try { google.accounts.oauth2.revoke(tok, ()=>{}); } catch {} }
-  document.getElementById('signOutBtn').style.display = 'none';
-  document.getElementById('syncBtn').textContent = 'Connect';
-  setSyncStatus('', 'Signed out — tap Connect to sign in again');
-  flash('Signed out');
-}
-
-function handleSyncBtn() {
-  if (accessToken) { setSyncStatus('busy', 'Syncing…'); saveToDrive(); }
-  else startAuth();
-}
-
-// ============================================================
-//  DRIVE LOAD / SAVE
-// ============================================================
-async function loadFromDrive() {
-  try {
-    const res  = await fetch(`${DRIVE_API}/files?spaces=appDataFolder&q=name%3D%27${FILENAME}%27&fields=files(id,name,modifiedTime)`,
-      { headers: { Authorization: 'Bearer ' + accessToken } });
-    const json = await res.json();
-    if (json.files && json.files.length > 0) {
-      driveFileId = json.files[0].id;
-      localStorage.setItem(FILE_KEY, driveFileId);
-      if (!localStorage.getItem(HINT_KEY)) localStorage.setItem(HINT_KEY, '__authed__');
-      document.getElementById('signOutBtn').style.display = 'block';
-      const cr   = await fetch(`${DRIVE_API}/files/${driveFileId}?alt=media`, { headers: { Authorization: 'Bearer ' + accessToken } });
-      const data = await cr.json();
-      if (!data.food)    data.food    = { categories: [], items: [] };
-      if (!data.periods) data.periods = [];
-      if (!data.notes)   data.notes   = {};
-      db = data;
-      saveLocal();
-      render();
-      setSyncStatus('ok', 'Synced with Drive', json.files[0].modifiedTime);
-    } else {
-      if (!localStorage.getItem(HINT_KEY)) localStorage.setItem(HINT_KEY, '__authed__');
-      document.getElementById('signOutBtn').style.display = 'block';
-      setSyncStatus('busy', 'Creating Drive file…');
-      await saveToDrive();
-    }
-  } catch(e) { setSyncStatus('err', 'Drive load failed'); console.error(e); }
-}
-
-async function saveToDrive() {
-  if (!accessToken) { saveLocal(); return; }
-  isSyncing = true; updateSyncBtn(true);
-  try {
-    const content = JSON.stringify(db);
-    let res;
-    if (driveFileId) {
-      res = await fetch(`${UPLOAD_API}/files/${driveFileId}?uploadType=media`,
-        { method:'PATCH', headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'application/json' }, body:content });
-    } else {
-      const meta = JSON.stringify({ name: FILENAME, parents: ['appDataFolder'] });
-      const form = new FormData();
-      form.append('metadata', new Blob([meta], {type:'application/json'}));
-      form.append('file', new Blob([content], {type:'application/json'}));
-      res = await fetch(`${UPLOAD_API}/files?uploadType=multipart&fields=id`,
-        { method:'POST', headers:{ Authorization:'Bearer '+accessToken }, body:form });
-      const created = await res.json();
-      driveFileId = created.id;
-      localStorage.setItem(FILE_KEY, driveFileId);
-    }
-    if (res.ok) { saveLocal(); setSyncStatus('ok', 'Saved to Drive', new Date().toISOString()); }
-    else if (res.status === 401) { accessToken = null; setSyncStatus('busy','Refreshing token…'); refreshTokenThenRetry(); }
-    else { setSyncStatus('err', 'Save failed (HTTP ' + res.status + ')'); }
-  } catch(e) { setSyncStatus('err', 'Drive save failed'); console.error(e); saveLocal(); }
-  isSyncing = false; updateSyncBtn(false);
-}
-
-function setSyncStatus(state, label, isoTime) {
-  document.getElementById('syncDot').className = 'sync-dot ' + state;
-  let text = label;
-  if (isoTime) {
-    const d = new Date(isoTime);
-    text += ' · ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  }
-  document.getElementById('syncLabel').innerHTML = text;
-  const btn = document.getElementById('syncBtn');
-  if (state === 'ok') btn.textContent = '↻ Sync';
-  else if (state === 'err') btn.textContent = 'Retry';
-}
-function updateSyncBtn(disabled) {
-  const btn = document.getElementById('syncBtn');
-  btn.disabled = disabled;
-  btn.textContent = disabled ? 'Saving…' : '↻ Sync';
-}
-
-function save() {
-  saveLocal();
-  clearTimeout(save._timer);
-  save._timer = setTimeout(saveToDrive, 1500);
-}
-
-// ============================================================
-//  TAB SWITCHING
-// ============================================================
-function switchTab(name) {
-  ['tracker','food','history'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('active', t===name);
-    document.getElementById('panel-'+t).classList.toggle('active', t===name);
-  });
-  if (name === 'food')    renderFoodDb();
-  if (name === 'history') { renderHistory(); renderCompareChart(); }
-}
-
-// ============================================================
-//  UTILITIES
-// ============================================================
-function todayStr(){
-  const d = new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-function fmtDate(d){ const [y,m,day]=d.split('-'); return `${day}.${m}.${y.slice(2)}`; }
-function nowTime(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-function calColor(kcal){
-  const t = Math.min(Math.max(kcal,0)/1500,1);
-  return `hsl(${Math.round(120-120*t)},${Math.round(62+20*t)}%,${Math.round(58-4*t)}%)`;
-}
-let flashTimer;
-function flash(msg, err=false){
-  const el = document.getElementById('flash');
-  el.textContent = msg; el.className = err ? 'err' : '';
-  el.style.display='block'; el.style.opacity='1';
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.style.display='none',200); }, 2500);
-}
-function getDate(){ return document.getElementById('datePicker').value || todayStr(); }
-function getActivePeriod() {
-  if (!activePeriodId) return null;
-  return (db.periods || []).find(p => p.id === activePeriodId) || null;
-}
-function periodContainsDate(p, dateStr) {
-  if (!p) return true;
-  if (dateStr < p.start) return false;
-  if (p.end && dateStr > p.end) return false;
-  return true;
-}
-function setToday(){
-  document.getElementById('datePicker').value = todayStr();
-  render();
-}
-function shiftDay(delta) {
-  const dp  = document.getElementById('datePicker');
-  const cur = dp.value || todayStr();
-  const d   = new Date(cur + 'T12:00:00');
-  d.setDate(d.getDate() + delta);
-  const next = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  const today = todayStr();
-  if (next > today) return;
-  // Clamp to active period bounds
-  const p = getActivePeriod();
-  if (p) {
-    if (next < p.start) return;
-    if (p.end && next > p.end) return;
-  }
-  dp.value = next;
-  render();
-}
-function toggleEdit(){
-  editMode = !editMode;
-  const btn = document.getElementById('editBtn');
-  btn.textContent = editMode ? '✓ done' : '✎ edit';
-  btn.className = 'btn-edit' + (editMode ? ' on' : '');
-  renderWeightLog();
-}
-
-// ============================================================
-//  AUTOCOMPLETE SUGGESTIONS
-// ============================================================
-function getAllFoodItems() {
-  // Returns [{name, grams, kcalPortion, catName}]
-  if (!db.food) return [];
-  return (db.food.items || []).map(item => {
-    const cat = (db.food.categories || []).find(c => c.id === item.catId);
-    const kcalPortion = Math.round((item.kcalPer100 * item.grams) / 100 * 10) / 10;
-    return { name: item.name, grams: item.grams, kcalPortion, catName: cat ? cat.name : '' };
-  });
-}
-
-function onCalInput(e) {
-  const val = e.target.value.trim();
-  sugExpanded = false;
-  sugFocusIdx = -1;
-
-  // Only show suggestions if input starts with a letter (any script)
-  if (!val || /^[^\p{L}]/u.test(val)) {
-    hideSuggestions(); return;
-  }
-
-  const query = val.toLowerCase();
-  // Substring search: match anywhere in the name, sort prefix matches first
-  const matched = getAllFoodItems()
-    .map(f => ({ ...f, idx: f.name.toLowerCase().indexOf(query) }))
-    .filter(f => f.idx !== -1)
-    .sort((a, b) => a.idx - b.idx || a.name.localeCompare(b.name));
-
-  sugItems = matched;
-  if (!matched.length) { hideSuggestions(); return; }
-  renderSuggestions(false);
-}
-
-function highlightMatch(rawName, query) {
-  // Highlight the matched substring (case-insensitive) wherever it appears
-  const lo   = rawName.toLowerCase();
-  const start = lo.indexOf(query.toLowerCase());
-  if (start === -1) return rawName;
-  return rawName.slice(0, start)
-    + '<em>' + rawName.slice(start, start + query.length) + '</em>'
-    + rawName.slice(start + query.length);
-}
-
-function renderSuggestions(expanded) {
-  const box   = document.getElementById('sugBox');
-  const query = document.getElementById('calInput').value.trim();
-  const visible = expanded ? sugItems : sugItems.slice(0, 3);
-  const hidden  = sugItems.length - 3;
-
-  box.innerHTML = '';
-  visible.forEach((item, idx) => {
-    const div = document.createElement('div');
-    div.className = 'sug-item';
-    if (idx === sugFocusIdx) div.classList.add('focused');
-
-    div.innerHTML = `
-      <span class="sug-name">${highlightMatch(item.name, query)}</span>
-      <div class="sug-right">
-        <span class="sug-kcal">${item.kcalPortion} kcal · ${item.grams}g</span>
-        <span class="sug-cat">${item.catName}</span>
-      </div>`;
-    div.addEventListener('mousedown', (e) => { e.preventDefault(); selectSuggestion(item); });
-    box.appendChild(div);
-  });
-
-  if (!expanded && hidden > 0) {
-    const more = document.createElement('div');
-    more.className = 'sug-more';
-    more.textContent = `+ ${hidden} more`;
-    more.addEventListener('mousedown', (e) => { e.preventDefault(); sugExpanded = true; renderSuggestions(true); });
-    box.appendChild(more);
-  }
-
-  box.style.display = 'block';
-}
-
-function hideSuggestions() {
-  document.getElementById('sugBox').style.display = 'none';
-  sugFocusIdx = -1;
-}
-
-function onCalKeydown(e) {
-  const box = document.getElementById('sugBox');
-  if (box.style.display === 'none') {
-    if (e.key === 'Enter') addCalories();
-    return;
-  }
-  const itemEls = box.querySelectorAll('.sug-item');
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    sugFocusIdx = Math.min(sugFocusIdx + 1, itemEls.length - 1);
-    updateSugFocus(itemEls);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    sugFocusIdx = Math.max(sugFocusIdx - 1, -1);
-    updateSugFocus(itemEls);
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (sugFocusIdx >= 0 && sugFocusIdx < sugItems.length) {
-      selectSuggestion(sugItems[sugFocusIdx]);
-    } else {
-      addCalories();
-    }
-  } else if (e.key === 'Escape') {
-    hideSuggestions();
-  }
-}
-
-function updateSugFocus(itemEls) {
-  itemEls.forEach((el, i) => el.classList.toggle('focused', i === sugFocusIdx));
-}
-
-function selectSuggestion(item) {
-  hideSuggestions();
-  // Directly add the portion kcal as a calorie entry, with the food name
-  const date = getDate();
-  if (!db.calories[date]) db.calories[date] = [];
-  db.calories[date].push({ id: Date.now(), amount: item.kcalPortion, time: nowTime(), label: item.name });
-  document.getElementById('calInput').value = '';
-  save();
-  renderCalories();
-  renderCalChart();
-  flash(`${item.name} — ${item.kcalPortion} kcal added ✓`);
-}
-
-// ============================================================
-//  CALORIES
-// ============================================================
-function addCalories() {
-  const inp = document.getElementById('calInput');
-  const raw = inp.value.trim();
-  // If it's a number — add directly; if text but no suggestion selected — ignore
-  const val = parseFloat(raw.replace(',','.'));
-  if (!raw || isNaN(val) || val < 1 || val > 10000) {
-    if (raw && isNaN(val)) { flash('Select a suggestion or enter a number', true); return; }
-    flash('Enter a valid amount (1–10000)', true); return;
-  }
-  const date = getDate();
-  if (!db.calories[date]) db.calories[date] = [];
-  db.calories[date].push({ id: Date.now(), amount: Math.round(val), time: nowTime() });
-  inp.value = '';
-  hideSuggestions();
-  save();
-  renderCalories();
-  renderCalChart();
-  flash('Calories added ✓');
-}
-
-function deleteCal(date, id) {
-  if (!db.calories[date]) return;
-  db.calories[date] = db.calories[date].filter(e => e.id !== id);
-  if (!db.calories[date].length) delete db.calories[date];
-  save(); renderCalories(); renderCalChart();
-}
-
-function renderCalories() {
-  const date    = getDate();
-  document.getElementById('calDateLabel').textContent = fmtDate(date);
-  // If date is outside active period, show nothing
-  const ap = getActivePeriod();
-  if (ap && !periodContainsDate(ap, date)) {
-    const total = 0;
-    document.getElementById('calTotal').textContent = '—';
-    document.getElementById('calTotal').style.color = 'rgba(180,220,185,.3)';
-    document.getElementById('calUnit').style.color  = 'rgba(180,220,185,.3)';
-    document.getElementById('calEntries').innerHTML = '';
-    return;
-  }
-  const entries = db.calories[date] || [];
-  const total   = entries.reduce((s,e) => s + e.amount, 0);
-  const color   = calColor(total);
-  document.getElementById('calTotal').textContent = total.toLocaleString();
-  document.getElementById('calTotal').style.color = color;
-  document.getElementById('calUnit').style.color  = color;
-  const ul = document.getElementById('calEntries');
-  ul.innerHTML = '';
-  let fwd = 0;
-  const colored = entries.map(e => { fwd += e.amount; return {...e, runColor: calColor(fwd)}; });
-  [...colored].reverse().forEach(entry => {
-    const li = document.createElement('li');
-    li.className = 'entry';
-    li.innerHTML = `
-      <div class="entry-left">
-        <span class="entry-time">${entry.time}${entry.label ? ' · ' + entry.label : ''}</span>
-        <span class="entry-val" style="color:${entry.runColor}">+${entry.amount} kcal</span>
-      </div>
-      <button class="btn-del" onclick="deleteCal('${date}',${entry.id})">✕</button>`;
-    ul.appendChild(li);
-  });
-}
-
-// ============================================================
-//  WEIGHT
-// ============================================================
-function saveWeight() {
-  const inp = document.getElementById('weightInput');
-  const val = parseFloat(inp.value.replace(',','.'));
-  if (!val || val < 20 || val > 300) { flash('Enter a valid weight (20–300 kg)', true); return; }
-  db.weights[getDate()] = val;
-  inp.value = '';
-  save(); renderWeight(); renderWeightChart();
-  flash('Weight saved ✓');
-}
-function deleteWeight(date) {
-  delete db.weights[date];
-  save(); renderWeight(); renderWeightChart();
-}
-function renderWeight() {
-  const date = getDate();
-  const ap = getActivePeriod();
-  const outOfPeriod = ap && !periodContainsDate(ap, date);
-  const weightInput = document.getElementById('weightInput');
-  const saveBtn = weightInput.nextElementSibling;
-  if (outOfPeriod) {
-    weightInput.disabled = true; saveBtn.disabled = true; saveBtn.style.opacity = '.4';
-  } else {
-    weightInput.disabled = false; saveBtn.disabled = false; saveBtn.style.opacity = '';
-  }
-  const w = outOfPeriod ? undefined : db.weights[date];
-  const display = document.getElementById('weightDisplay');
-  const hint    = document.getElementById('weightHint');
-  if (w) {
-    display.style.display='flex';
-    document.getElementById('weightBig').textContent = w;
-    hint.style.display='none';
-  } else {
-    display.style.display='none'; hint.style.display='block';
-    hint.textContent = `No weight recorded for ${fmtDate(date)}`;
-  }
-  renderStats(); renderWeightLog(); renderGoal();
-}
-function renderStats() {
-  const p = getActivePeriod();
-  const entries = Object.entries(db.weights).filter(([d]) => periodContainsDate(p,d)).sort(([a],[b]) => a.localeCompare(b));
-  const grid    = document.getElementById('statsGrid');
-  if (entries.length < 2) { grid.style.display='none'; return; }
-  grid.style.display='grid';
-  const first = parseFloat(entries[0][1]), last = parseFloat(entries[entries.length-1][1]);
-  const diff  = (last - first).toFixed(1);
-  const minW  = Math.min(...entries.map(e => parseFloat(e[1])));
-  document.getElementById('sStart').textContent = first + ' kg';
-  const sChange = document.getElementById('sChange');
-  sChange.textContent = (diff > 0 ? '+' : '') + diff + ' kg';
-  sChange.className = 'stat-v ' + (diff < 0 ? 'red' : 'amber');
-  document.getElementById('sLow').textContent  = minW + ' kg';
-  document.getElementById('sCount').textContent = entries.length;
-}
-function renderWeightLog() {
-  const wrap = document.getElementById('logWrap');
-  const p = getActivePeriod();
-  const entries = Object.entries(db.weights).filter(([d]) => periodContainsDate(p,d)).sort(([a],[b]) => b.localeCompare(a));
-  if (!entries.length) { wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  const list = document.getElementById('weightLog');
-  list.innerHTML = '';
-  entries.forEach(([date,w]) => {
-    const div = document.createElement('div');
-    div.className = 'log-row';
-    const isToday = date === todayStr();
-    div.innerHTML = `
-      <span class="log-date">${fmtDate(date)}</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="log-val">${w} kg</span>
-        ${isToday ? '<span class="badge">today</span>' : ''}
-        ${editMode ? `<button class="btn-del" onclick="deleteWeight('${date}')">✕</button>` : ''}
-      </div>`;
-    list.appendChild(div);
-  });
-}
-
-// ============================================================
-//  CHARTS
-// ============================================================
-// chartDefaults removed — all charts now build options inline to preserve callbacks
-function renderWeightChart() {
-  const p = getActivePeriod();
-  const entries = Object.entries(db.weights).filter(([d]) => periodContainsDate(p,d)).sort(([a],[b]) => a.localeCompare(b));
-  const wrap = document.getElementById('weightChartWrap'), noData = document.getElementById('weightNoData');
-  if (entries.length < 2) { wrap.style.display='none'; noData.style.display='flex'; return; }
-  wrap.style.display='block'; noData.style.display='none';
-  const ctx = document.getElementById('weightChart').getContext('2d');
-  if (wChart) wChart.destroy();
-  // Build options directly (no JSON clone — that strips functions)
-  wChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: entries.map(e => e[0]),
-      datasets: [{
-        data: entries.map(e => parseFloat(e[1])),
-        borderColor: '#78dc8c',
-        backgroundColor: 'rgba(120,220,140,0.08)',
-        pointBackgroundColor: '#78dc8c',
-        pointRadius: 4, pointHoverRadius: 7,
-        borderWidth: 2, tension: 0.3, fill: true,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      onClick: (event, elements) => {
-        try {
-          if (!elements.length) return;
-          const date = entries[elements[0].index][0];
-          document.getElementById('datePicker').value = date;
-          render();
-          document.getElementById('weightInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } catch(err) {
-          console.error('[weight chart click]', err.message, err.stack);
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(10,12,18,0.95)',
-          titleFont: { family: 'DM Mono', size: 11 },
-          bodyFont:  { family: 'DM Mono', size: 12 },
-          padding: 10, cornerRadius: 8,
-          callbacks: {
-            title: items => fmtDate(items[0].label),
-            afterLabel: () => '  ↗ Click to open this date',
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid:  { color: 'rgba(120,220,140,0.07)' },
-          ticks: { color: 'rgba(180,220,185,0.45)', font: { family: 'DM Mono', size: 9 },
-                   maxTicksLimit: 6, callback: function(v) { return fmtDate(this.getLabelForValue(v)); } }
-        },
-        y: {
-          grid:  { color: 'rgba(120,220,140,0.07)' },
-          ticks: { color: 'rgba(180,220,185,0.45)', font: { family: 'DM Mono', size: 9 } }
-        }
-      }
-    }
-  });
-}
-function renderCalChart() {
-  const p = getActivePeriod();
-  const entries = Object.entries(db.calories).filter(([d]) => periodContainsDate(p,d)).sort(([a],[b]) => a.localeCompare(b))
-    .map(([date,es]) => ({ date, total: es.reduce((s,e) => s+e.amount, 0) }));
-  const wrap = document.getElementById('calChartWrap');
-  if (entries.length < 2) { wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  const ctx = document.getElementById('calChart').getContext('2d');
-  if (cChart) cChart.destroy();
-  cChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: entries.map(e => e.date),
-      datasets: [{
-        data: entries.map(e => e.total),
-        borderColor: '#f0c060',
-        backgroundColor: 'rgba(240,192,96,0.08)',
-        pointBackgroundColor: '#f0c060',
-        pointRadius: 4, borderWidth: 2, tension: 0.3, fill: true,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(10,12,18,0.95)',
-          titleFont: { family: 'DM Mono', size: 11 },
-          bodyFont:  { family: 'DM Mono', size: 12 },
-          padding: 10, cornerRadius: 8,
-          callbacks: { title: items => fmtDate(items[0].label) }
-        }
-      },
-      scales: {
-        x: {
-          grid:  { color: 'rgba(240,192,96,0.07)' },
-          ticks: { color: 'rgba(240,192,96,0.45)', font: { family: 'DM Mono', size: 9 },
-                   maxTicksLimit: 6, callback: function(v) { return fmtDate(this.getLabelForValue(v)); } }
-        },
-        y: {
-          grid:  { color: 'rgba(240,192,96,0.07)' },
-          ticks: { color: 'rgba(240,192,96,0.45)', font: { family: 'DM Mono', size: 9 } }
-        }
-      }
-    }
-  });
-}
-
-// ============================================================
-//  FOOD DATABASE
-// ============================================================
-function openCatModal() {
-  document.getElementById('catNameInput').value = '';
-  document.getElementById('catModal').classList.add('open');
-  setTimeout(() => document.getElementById('catNameInput').focus(), 100);
-}
-function closeCatModal() {
-  document.getElementById('catModal').classList.remove('open');
-}
-document.getElementById('catNameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') confirmAddCat();
-  if (e.key === 'Escape') closeCatModal();
-});
-document.getElementById('catModal').addEventListener('mousedown', e => {
-  if (e.target === document.getElementById('catModal')) closeCatModal();
-});
-
-function confirmAddCat() {
-  const name = document.getElementById('catNameInput').value.trim();
-  if (!name) { flash('Enter a category name', true); return; }
-  if (!db.food) db.food = { categories: [], items: [] };
-  db.food.categories.push({ id: Date.now(), name });
-  save();
-  closeCatModal();
-  renderFoodDb();
-  flash('Category added ✓');
-}
-
-function deleteCategory(catId) {
-  db.food.categories = db.food.categories.filter(c => c.id !== catId);
-  db.food.items      = db.food.items.filter(i => i.catId !== catId);
-  save(); renderFoodDb();
-}
-
-function toggleCat(catId) {
-  const block = document.getElementById('cat-' + catId);
-  block.classList.toggle('open');
-  block.classList.remove('adding');
-}
-
-function showAddFoodForm(catId) {
-  const block = document.getElementById('cat-' + catId);
-  block.classList.add('open');
-  block.classList.add('adding');
-  // Reset form fields
-  block.querySelector('.inp-name').value     = '';
-  block.querySelector('.inp-grams').value    = '';
-  block.querySelector('.inp-kcal100').value  = '';
-  block.querySelector('.inp-portion').value  = '';
-  block.querySelector('.inp-name').focus();
-}
-
-function cancelAddFood(catId) {
-  const block = document.getElementById('cat-' + catId);
-  block.classList.remove('adding');
-}
-
-function calcPortion(catId) {
-  const block  = document.getElementById('cat-' + catId);
-  const g      = parseFloat(block.querySelector('.inp-grams').value);
-  const k      = parseFloat(block.querySelector('.inp-kcal100').value);
-  const portEl = block.querySelector('.inp-portion');
-  if (g > 0 && k > 0) {
-    portEl.value = Math.round((k * g / 100) * 10) / 10;
-  } else {
-    portEl.value = '';
-  }
-}
-
-function saveFood(catId) {
-  const block  = document.getElementById('cat-' + catId);
-  const name   = block.querySelector('.inp-name').value.trim();
-  const grams  = parseFloat(block.querySelector('.inp-grams').value);
-  const k100   = parseFloat(block.querySelector('.inp-kcal100').value);
-  if (!name)         { flash('Enter a product name', true); return; }
-  if (!grams || grams <= 0) { flash('Enter valid grams', true); return; }
-  if (!k100  || k100 <= 0)  { flash('Enter valid kcal/100g', true); return; }
-  db.food.items.push({ id: Date.now(), catId, name, grams, kcalPer100: k100 });
-  save();
-  block.classList.remove('adding');
-  renderFoodDb();
-  flash('Product saved ✓');
-}
-
-function deleteFoodItem(itemId) {
-  db.food.items = db.food.items.filter(i => i.id !== itemId);
-  save(); renderFoodDb();
-}
-
-function renderFoodDb() {
-  if (!db.food) db.food = { categories: [], items: [] };
-  const cats  = db.food.categories || [];
-  const items = db.food.items      || [];
-  const list  = document.getElementById('catList');
-
-  // Preserve open/adding state BEFORE clearing
-  const openIds   = new Set();
-  const addingIds = new Set();
-  list.querySelectorAll('.cat-block').forEach(b => {
-    const id = parseInt(b.id.replace('cat-',''));
-    if (b.classList.contains('open'))   openIds.add(id);
-    if (b.classList.contains('adding')) addingIds.add(id);
-  });
-
-  // Clear and rebuild — never reference the static #foodEmpty element
-  list.innerHTML = '';
-
-  if (!cats.length) {
-    list.innerHTML = '<div class="empty-state"><span class="empty-icon">&#x1F37D;</span>No categories yet.<br>Tap <b>+ Category</b> to get started.</div>';
-    return;
-  }
-  cats.forEach(cat => {
-    const catItems = items.filter(i => i.catId === cat.id);
-    const isOpen   = openIds.has(cat.id);
-    const isAdding = addingIds.has(cat.id);
-
-    const block = document.createElement('div');
-    block.className = 'cat-block' + (isOpen ? ' open' : '') + (isAdding ? ' adding' : '');
-    block.id = 'cat-' + cat.id;
-
-    // Table rows HTML
-    const rowsHtml = catItems.length ? catItems.map(item => {
-      const portion = Math.round((item.kcalPer100 * item.grams) / 100 * 10) / 10;
-      const safeName = item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<tr>
-        <td class="td-name editable" ondblclick="startEditItem(${item.id},'${safeName}',this)" title="Double-click to rename">${item.name}</td>
-        <td>${item.grams}g</td>
-        <td class="td-kcal">${item.kcalPer100}</td>
-        <td class="td-portion">${portion}</td>
-        <td class="td-del"><button class="btn-row-del" onclick="deleteFoodItem(${item.id})">✕</button></td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="5" style="text-align:center;color:rgba(180,220,185,.2);padding:16px;font-size:11px;letter-spacing:1px">NO PRODUCTS YET</td></tr>`;
-
-    block.innerHTML = `
-      <div class="cat-head" onclick="toggleCat(${cat.id})" id="cathead-${cat.id}">
-        <span class="cat-name editable" ondblclick="event.stopPropagation();startEditCat(${cat.id},'${cat.name.replace(/'/g,String.fromCharCode(39))}',document.getElementById('cathead-${cat.id}'))" title="Double-click to rename">${cat.name}</span>
-        <div class="cat-meta">
-          <span class="cat-count">${catItems.length} item${catItems.length !== 1 ? 's' : ''}</span>
-          <button class="btn-row-del" onclick="event.stopPropagation();deleteCategory(${cat.id})" style="margin-left:4px">✕</button>
-          <span class="cat-chevron">▾</span>
+  <!-- Service buttons -->
+  <div class="services">
+    <button class="svc-btn" onclick="probeService('telegram')" title="Check Telegram">
+      <div class="svc-shell">
+        <div class="svc-ring" id="svc-ring-telegram"></div>
+        <div class="svc-bulb checking" id="svc-bulb-telegram">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21.944 3.069a1.5 1.5 0 0 0-1.52-.232L2.56 9.907a1.5 1.5 0 0 0 .08 2.79l4.21 1.404 1.733 5.196a1 1 0 0 0 1.73.303l2.42-2.906 4.56 3.326a1.5 1.5 0 0 0 2.338-1.002l2-14.5a1.5 1.5 0 0 0-.687-1.449z" fill="#fff"/></svg>
         </div>
       </div>
-      <div class="cat-body">
-        <table class="food-table">
-          <thead><tr>
-            <th>Product</th><th>Grams</th><th>kcal/100g</th><th>Portion kcal</th><th></th>
-          </tr></thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-        <button class="btn-add-food" onclick="showAddFoodForm(${cat.id})">＋ Add product</button>
-        <div class="add-food-form">
-          <div class="form-row">
-            <input type="text"   class="inp-name"   placeholder="Product name" maxlength="60" autocomplete="off"
-              onkeydown="if(event.key==='Enter') saveFood(${cat.id})"/>
-          </div>
-          <div class="form-row">
-            <input type="number" class="inp-grams"   placeholder="Grams"      min="1" max="9999"
-              oninput="calcPortion(${cat.id})" onkeydown="if(event.key==='Enter') saveFood(${cat.id})"/>
-            <input type="number" class="inp-kcal100" placeholder="kcal/100g"  min="1" max="9999"
-              oninput="calcPortion(${cat.id})" onkeydown="if(event.key==='Enter') saveFood(${cat.id})"/>
-            <input type="text"   class="inp-portion" placeholder="Portion" readonly tabindex="-1"/>
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel-food" onclick="cancelAddFood(${cat.id})">Cancel</button>
-            <button class="btn-save-food"   onclick="saveFood(${cat.id})">Save</button>
-          </div>
+      <div class="svc-label">Telegram</div>
+      <div class="svc-status" id="svc-status-telegram">—</div>
+    </button>
+
+    <button class="svc-btn" onclick="probeService('yandex')" title="Check Yandex">
+      <div class="svc-shell">
+        <div class="svc-ring" id="svc-ring-yandex"></div>
+        <div class="svc-bulb checking" id="svc-bulb-yandex">
+          <svg viewBox="0 0 28 28" fill="none"><text x="5" y="22" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#fff">Я</text></svg>
         </div>
-      </div>`;
-    list.appendChild(block);
-  });
-}
+      </div>
+      <div class="svc-label">Yandex</div>
+      <div class="svc-status" id="svc-status-yandex">—</div>
+    </button>
+  </div>
 
+  <!-- Event log -->
+  <div class="log">
+    <div class="log-header">Event log</div>
+    <div class="log-entries" id="log-entries"></div>
+  </div>
 
+  <script>
+    // ── Main internet probe ──
+    const bulb       = document.getElementById('bulb');
+    const ring       = document.getElementById('ring');
+    const iconWifi   = document.getElementById('bulb-icon-wifi');
+    const iconOff    = document.getElementById('bulb-icon-off');
+    const label      = document.getElementById('status-label');
+    const detail     = document.getElementById('detail');
+    const pingText   = document.getElementById('ping-text');
+    const logEntries = document.getElementById('log-entries');
 
+    let currentState = null;
+    let probeTimer   = null;
 
-// ============================================================
-//  INLINE EDITING (category name + food item name)
-// ============================================================
-function startEditCat(catId, currentName, el) {
-  if (el.querySelector('.inline-edit-input')) return; // already editing
-  const span = el.querySelector('.cat-name');
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.value = currentName;
-  inp.className = 'inline-edit-input cat-edit';
-  inp.maxLength = 40;
+    function ts() { return new Date().toTimeString().slice(0, 8); }
 
-  function commit() {
-    const val = inp.value.trim();
-    if (val && val !== currentName) {
-      const cat = db.food.categories.find(c => c.id === catId);
-      if (cat) { cat.name = val; save(); }
+    function addLog(msg, dotClass) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<div class="dot ${dotClass}"></div><span class="ts">${ts()}</span><span class="msg">${msg}</span>`;
+      logEntries.prepend(entry);
+      const all = logEntries.querySelectorAll('.log-entry');
+      if (all.length > 40) all[all.length - 1].remove();
     }
-    renderFoodDb();
-  }
 
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  { e.preventDefault(); commit(); }
-    if (e.key === 'Escape') { renderFoodDb(); }
-    e.stopPropagation();
-  });
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('click', e => e.stopPropagation());
-
-  span.replaceWith(inp);
-  inp.focus();
-  inp.select();
-}
-
-function startEditItem(itemId, currentName, tdEl) {
-  if (tdEl.querySelector('.inline-edit-input')) return;
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.value = currentName;
-  inp.className = 'inline-edit-input item-edit';
-  inp.maxLength = 60;
-
-  function commit() {
-    const val = inp.value.trim();
-    if (val && val !== currentName) {
-      const item = db.food.items.find(i => i.id === itemId);
-      if (item) { item.name = val; save(); }
+    function updateTitle(online) {
+      document.title = online ? '🟢 Online' : '🔴 Offline';
     }
-    renderFoodDb();
-  }
 
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  { e.preventDefault(); commit(); }
-    if (e.key === 'Escape') { renderFoodDb(); }
-    e.stopPropagation();
-  });
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('click', e => e.stopPropagation());
+    function setOnline(latency) {
+      if (currentState === 'online') return;
+      currentState = 'online';
+      bulb.className  = 'bulb online';
+      ring.className  = 'ring pulse-green';
+      label.className = 'status-label online';
+      iconWifi.style.display = '';
+      iconOff.style.display  = 'none';
+      label.textContent  = 'Online';
+      detail.textContent = latency ? `Response in ${latency}ms` : 'Connected';
+      detail.style.color = '#22c55e';
+      pingText.textContent = latency ? `Last ping: ${latency}ms — ${ts()}` : `Connected — ${ts()}`;
+      updateTitle(true);
+      addLog('Internet: connection established', 'dot-green');
+    }
 
-  tdEl.innerHTML = '';
-  tdEl.appendChild(inp);
-  inp.focus();
-  inp.select();
-}
+    function setOffline() {
+      if (currentState === 'offline') return;
+      currentState = 'offline';
+      bulb.className  = 'bulb offline';
+      ring.className  = 'ring pulse-red';
+      label.className = 'status-label offline';
+      iconWifi.style.display = 'none';
+      iconOff.style.display  = '';
+      label.textContent  = 'Offline';
+      detail.textContent = 'No internet detected';
+      detail.style.color = '#ef4444';
+      pingText.textContent = `No response — ${ts()}`;
+      updateTitle(false);
+      addLog('Internet: connection lost', 'dot-red');
+    }
 
-// ============================================================
-//  GOAL / PREDICTION
-// ============================================================
-const GOAL_KEY = 'wt_goal';
-
-function setGoal() {
-  const inp = document.getElementById('goalInput');
-  const val = parseFloat(inp.value.replace(',','.'));
-  if (!val || val < 20 || val > 300) { flash('Enter a valid goal weight (20–300 kg)', true); return; }
-  localStorage.setItem(GOAL_KEY, val);
-  renderGoal();
-  flash('Goal set ✓');
-}
-
-function renderGoal() {
-  const goal     = parseFloat(localStorage.getItem(GOAL_KEY));
-  const content  = document.getElementById('goalContent');
-  const inp      = document.getElementById('goalInput');
-
-  if (goal) inp.value = goal;
-
-  const entries  = Object.entries(db.weights)
-    .sort(([a],[b]) => a.localeCompare(b))
-    .map(([d,v]) => ({ d, v: parseFloat(v) }));
-
-  if (!goal || !entries.length) {
-    content.innerHTML = '<div class="goal-empty">Set a desirable weight to see prediction.</div>';
-    return;
-  }
-
-  const latest   = entries[entries.length - 1].v;
-  const remaining = parseFloat((latest - goal).toFixed(1));
-  const isLoss   = remaining > 0; // losing weight to reach goal
-  const isGain   = remaining < 0; // gaining weight to reach goal
-
-  // Predict: average daily change over last N consecutive-date pairs
-  let predDate = null;
-  let avgDaily = null;
-  if (entries.length >= 2) {
-    let totalDelta = 0, totalDays = 0;
-    for (let i = 1; i < entries.length; i++) {
-      const daysApart = (new Date(entries[i].d) - new Date(entries[i-1].d)) / 86400000;
-      if (daysApart > 0 && daysApart <= 14) { // ignore big gaps
-        totalDelta += (entries[i].v - entries[i-1].v);
-        totalDays  += daysApart;
+    async function probe() {
+      const start = Date.now();
+      try {
+        await fetch(`https://www.gstatic.com/generate_204?_=${start}`, {
+          method: 'HEAD', cache: 'no-store', mode: 'no-cors'
+        });
+        const lat = Date.now() - start;
+        setOnline(lat);
+        if (currentState === 'online') pingText.textContent = `Last ping: ${lat}ms — ${ts()}`;
+      } catch {
+        if (!navigator.onLine) { setOffline(); }
+        else { setOnline(Date.now() - start); }
       }
+      clearTimeout(probeTimer);
+      probeTimer = setTimeout(probe, currentState === 'online' ? 5000 : 3000);
     }
-    if (totalDays > 0) {
-      avgDaily = totalDelta / totalDays; // kg per day (negative = losing)
-      // Only predict if direction makes sense
-      if ((isLoss && avgDaily < 0) || (isGain && avgDaily > 0)) {
-        const daysNeeded = Math.abs(remaining / avgDaily);
-        const target = new Date();
-        target.setDate(target.getDate() + Math.round(daysNeeded));
-        predDate = target.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-      }
-    }
-  }
 
-  const pct = entries.length ? Math.min(100, Math.max(0,
-    entries.length >= 2
-      ? Math.abs((entries[0].v - latest) / (entries[0].v - goal)) * 100
-      : 0
-  )) : 0;
+    window.addEventListener('online',  () => { addLog('Browser: online event', 'dot-green'); probe(); });
+    window.addEventListener('offline', () => { addLog('Browser: offline event', 'dot-red');  setOffline(); });
 
-  const remText  = remaining === 0 ? '🎉 Goal reached!'
-                 : (isLoss ? '−' + Math.abs(remaining) + ' kg to go' : '+' + Math.abs(remaining) + ' kg to go');
-  const remClass = remaining === 0 ? '' : (Math.abs(remaining) > 5 ? 'amber' : '');
+    probe();
 
-  const rateText = avgDaily !== null
-    ? (avgDaily < 0 ? '−' : '+') + Math.abs(avgDaily).toFixed(2) + ' kg/day avg'
-    : '—';
-
-  const etaText  = predDate || (avgDaily !== null && ((isLoss && avgDaily >= 0) || (isGain && avgDaily <= 0))
-    ? 'Trend going wrong way'
-    : entries.length < 2 ? 'Need 2+ entries' : '—');
-
-  content.innerHTML = `
-    <div class="goal-stats">
-      <div class="goal-stat">
-        <div class="goal-stat-l">Remaining</div>
-        <div class="goal-stat-v ${remClass}">${remText}</div>
-      </div>
-      <div class="goal-stat">
-        <div class="goal-stat-l">Rate</div>
-        <div class="goal-stat-v muted">${rateText}</div>
-      </div>
-      <div class="goal-stat" style="grid-column:1/-1">
-        <div class="goal-stat-l">Est. goal date</div>
-        <div class="goal-stat-v ${predDate ? '' : 'muted'}">${etaText}</div>
-      </div>
-    </div>
-    <div class="goal-progress"><div class="goal-progress-bar" style="width:${pct.toFixed(1)}%"></div></div>
-  `;
-}
-
-// ============================================================
-//  NOTES
-// ============================================================
-let noteSaveTimer = null;
-
-function renderNotes() {
-  const date = getDate();
-  const ta   = document.getElementById('notesInput');
-  if (!ta) return;
-  ta.value = (db.notes && db.notes[date]) ? db.notes[date] : '';
-}
-
-function onNoteInput() {
-  clearTimeout(noteSaveTimer);
-  noteSaveTimer = setTimeout(saveNote, 800);
-}
-
-function saveNote() {
-  const date = getDate();
-  const val  = document.getElementById('notesInput').value;
-  if (!db.notes) db.notes = {};
-  if (val.trim()) {
-    db.notes[date] = val;
-  } else {
-    delete db.notes[date];
-  }
-  save();
-  // Flash the saved dot
-  const dot = document.getElementById('notesSavedDot');
-  dot.classList.add('show');
-  setTimeout(() => dot.classList.remove('show'), 1200);
-}
-
-// ============================================================
-//  HISTORY COMPARISON CHART
-// ============================================================
-const PERIOD_COLORS = [
-  '#78dc8c','#f0c060','#7eb8f0','#e07070','#b07ef0',
-  '#70d4d4','#f0a070','#a0d870','#f070b8','#90b0f0',
-];
-let compareChart = null;
-
-function renderCompareChart() {
-  const wrap = document.getElementById('histCompareWrap');
-  const legend = document.getElementById('histCompareLegend');
-
-  // Only show when not viewing a specific period
-  if (activePeriodId) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-
-  const periods = (db.periods || []).filter(p => {
-    // Only periods that have at least 2 actual weight entries
-    const entries = Object.entries(db.weights).filter(([d]) => periodContainsDate(p, d));
-    return entries.length >= 2;
-  });
-
-  if (compareChart) { compareChart.destroy(); compareChart = null; }
-
-  if (!periods.length) {
-    legend.innerHTML = '';
-    document.querySelector('.hist-compare-chart').innerHTML =
-      '<div class="hist-compare-empty">Add weight entries to 2+ periods to see comparison</div>';
-    return;
-  }
-  // Restore canvas if it was replaced by the empty message
-  const chartWrap = document.querySelector('.hist-compare-chart');
-  if (!chartWrap.querySelector('canvas')) {
-    chartWrap.innerHTML = '<canvas id="histCompareChart"></canvas>';
-  }
-
-  // Build datasets — x axis = day offset from period start (day 0, 1, 2…)
-  const datasets = periods.map((p, i) => {
-    const color = PERIOD_COLORS[i % PERIOD_COLORS.length];
-    const entries = Object.entries(db.weights)
-      .filter(([d]) => periodContainsDate(p, d))
-      .sort(([a],[b]) => a.localeCompare(b))
-      .map(([d, v]) => {
-        const dayOffset = Math.round((new Date(d) - new Date(p.start)) / 86400000);
-        return { x: dayOffset, y: parseFloat(v), date: d };
-      });
-
-    return {
-      label: p.name,
-      data: entries,
-      borderColor: color,
-      backgroundColor: color + '18',
-      pointBackgroundColor: color,
-      pointRadius: 4,
-      pointHoverRadius: 7,
-      borderWidth: 2,
-      tension: 0.3,
-      fill: false,
-      parsing: { xAxisKey: 'x', yAxisKey: 'y' },
-      // Store period id for click navigation
-      _periodId: p.id,
-      _periodStart: p.start,
+    // ── Service checkers ──
+    const SERVICES = {
+      telegram: { url: 'https://web.telegram.org/favicon.ico', dotClass: 'dot-blue', label: 'Telegram' },
+      yandex:   { url: 'https://yandex.ru/favicon.ico',        dotClass: 'dot-red2', label: 'Yandex'   }
     };
-  });
 
-  // Legend
-  legend.innerHTML = datasets.map((ds, i) =>
-    `<div class="hcl-item"><div class="hcl-dot" style="background:${PERIOD_COLORS[i % PERIOD_COLORS.length]}"></div>${ds.label}</div>`
-  ).join('');
+    const svcState  = { telegram: null, yandex: null };
+    const svcTimers = { telegram: null, yandex: null };
 
-  const ctx = document.getElementById('histCompareChart').getContext('2d');
-  compareChart = new Chart(ctx, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      onClick: (event, elements) => {
-        try {
-          if (!elements.length) return;
-          const el    = elements[0];
-          const ds    = datasets[el.datasetIndex];
-          const point = ds.data[el.index];
-          switchTab('tracker');
-          const dp = document.getElementById('datePicker');
-          // Clear period filter if date is outside active period
-          if (activePeriodId) {
-            const ap = getActivePeriod();
-            if (!periodContainsDate(ap, point.date)) clearViewingPeriod();
-          }
-          dp.value = point.date;
-          render();
-          document.getElementById('weightInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } catch(err) {
-          console.error('[compare chart click]', err.message, err.stack);
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(10,12,18,.95)',
-          titleFont: {family:'DM Mono',size:10},
-          bodyFont: {family:'DM Mono',size:12},
-          padding: 9, cornerRadius: 7,
-          callbacks: {
-            title: items => {
-              const ds  = datasets[items[0].datasetIndex];
-              const pt  = ds.data[items[0].dataIndex];
-              return `${ds.label}  ·  ${fmtDate(pt.date)}`;
-            },
-            label: items => ` ${items.raw.y} kg  (day ${items.raw.x})`,
-            afterLabel: () => '  ↗ Click to open this date',
-          }
-        }
-      },
-      scales: {
-        x: {
-          type: 'linear',
-          title: { display: true, text: 'Day from period start', color: 'rgba(180,220,185,.3)', font:{family:'DM Mono',size:9} },
-          grid:  { color: 'rgba(120,220,140,.06)' },
-          ticks: { color: 'rgba(180,220,185,.35)', font:{family:'DM Mono',size:9}, maxTicksLimit: 8,
-                   callback: v => 'Day ' + v }
-        },
-        y: {
-          grid:  { color: 'rgba(120,220,140,.06)' },
-          ticks: { color: 'rgba(180,220,185,.35)', font:{family:'DM Mono',size:9}, maxTicksLimit: 6,
-                   callback: v => v + ' kg' }
-        }
+    function setSvcOnline(id, latency) {
+      const prev = svcState[id];
+      svcState[id] = 'online';
+      document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb online';
+      document.getElementById(`svc-ring-${id}`).className = 'svc-ring pulse-green';
+      const st = document.getElementById(`svc-status-${id}`);
+      st.className   = 'svc-status online';
+      st.textContent = latency ? `${latency}ms` : 'ok';
+      if (prev !== 'online') addLog(`${SERVICES[id].label}: reachable (${latency}ms)`, SERVICES[id].dotClass);
+    }
+
+    function setSvcOffline(id) {
+      const prev = svcState[id];
+      svcState[id] = 'offline';
+      document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb offline';
+      document.getElementById(`svc-ring-${id}`).className = 'svc-ring pulse-red';
+      const st = document.getElementById(`svc-status-${id}`);
+      st.className   = 'svc-status offline';
+      st.textContent = 'blocked';
+      if (prev !== 'offline') addLog(`${SERVICES[id].label}: not reachable`, 'dot-red');
+    }
+
+    async function probeService(id) {
+      const svc   = SERVICES[id];
+      const start = Date.now();
+      if (svcState[id] === null) {
+        document.getElementById(`svc-bulb-${id}`).className = 'svc-bulb checking';
       }
-    }
-  });
-}
-// ============================================================
-//  LATE NIGHT BANNER  (visible 20:00–04:00 local time)
-// ============================================================
-function checkLateBanner() {
-  const h   = new Date().getHours();
-  const show = h >= 20 || h < 4;
-  const el  = document.getElementById('lateBanner');
-  el.classList.toggle('hidden', !show);
-}
-
-// ============================================================
-//  HISTORY TAB  — period presets
-// ============================================================
-const histCharts = {};
-let editingPeriodId = null; // null = new, number = editing existing
-
-// ── Modal open/close ─────────────────────────────────────────
-function openPeriodModal(periodId) {
-  editingPeriodId = periodId;
-  const modal = document.getElementById('periodModal');
-  const p = periodId ? (db.periods || []).find(x => x.id === periodId) : null;
-
-  document.getElementById('pmTitle').textContent = p ? 'Edit Period' : 'New Period';
-  document.getElementById('pmName').value    = p ? p.name    : '';
-  document.getElementById('pmStart').value   = p ? p.start   : '';
-  document.getElementById('pmEnd').value     = p ? (p.end || '') : '';
-  document.getElementById('pmStartW').value  = p ? (p.startW || '') : '';
-  document.getElementById('pmEndW').value    = p ? (p.endW   || '') : '';
-  document.getElementById('pmCurrentCb').checked = p ? !!p.current : false;
-  updatePmCurrentUI();
-  modal.classList.add('open');
-  setTimeout(() => document.getElementById('pmName').focus(), 100);
-}
-function closePeriodModal() {
-  document.getElementById('periodModal').classList.remove('open');
-  editingPeriodId = null;
-}
-document.getElementById('periodModal').addEventListener('mousedown', e => {
-  if (e.target === document.getElementById('periodModal')) closePeriodModal();
-});
-document.getElementById('pmName').addEventListener('keydown', e => {
-  if (e.key === 'Enter') savePeriodModal();
-  if (e.key === 'Escape') closePeriodModal();
-});
-function togglePmCurrent() {
-  const cb = document.getElementById('pmCurrentCb');
-  cb.checked = !cb.checked;
-  updatePmCurrentUI();
-}
-function updatePmCurrentUI() {
-  const isCurrent = document.getElementById('pmCurrentCb').checked;
-  document.getElementById('pmEndWrap').style.display   = isCurrent ? 'none' : '';
-  document.getElementById('pmEndWWrap').style.display  = isCurrent ? 'none' : '';
-}
-
-// ── Save / validate ──────────────────────────────────────────
-function savePeriodModal() {
-  const name    = document.getElementById('pmName').value.trim();
-  const start   = document.getElementById('pmStart').value;
-  const isCurrent = document.getElementById('pmCurrentCb').checked;
-  const end     = isCurrent ? null : document.getElementById('pmEnd').value;
-  const startW  = parseFloat(document.getElementById('pmStartW').value) || null;
-  const endW    = isCurrent ? null : (parseFloat(document.getElementById('pmEndW').value) || null);
-
-  if (!name)  { flash('Enter a period name', true); return; }
-  if (!start) { flash('Select a start date', true); return; }
-  if (!isCurrent && end && end <= start) { flash('End date must be after start', true); return; }
-
-  if (!db.periods) db.periods = [];
-
-  if (editingPeriodId) {
-    const idx = db.periods.findIndex(p => p.id === editingPeriodId);
-    if (idx !== -1) {
-      db.periods[idx] = { ...db.periods[idx], name, start, end, startW, endW, current: isCurrent, done: !isCurrent && !!end };
-    }
-  } else {
-    db.periods.push({ id: Date.now(), name, start, end, startW, endW, current: isCurrent, done: false });
-  }
-
-  db.periods.sort((a,b) => b.start.localeCompare(a.start));
-  save();
-  closePeriodModal();
-  renderHistory();
-  flash(editingPeriodId ? 'Period updated ✓' : 'Period saved ✓');
-}
-
-// ── Delete ───────────────────────────────────────────────────
-function deletePeriod(id) {
-  db.periods = (db.periods || []).filter(p => p.id !== id);
-  if (activePeriodId === id) clearViewingPeriod();
-  save(); renderHistory();
-}
-
-// ── Finish current period ────────────────────────────────────
-function finishPeriod(id) {
-  const p = (db.periods || []).find(x => x.id === id);
-  if (!p) return;
-  p.end     = todayStr();
-  p.current = false;
-  p.done    = true;
-  save(); renderHistory();
-  flash('Period finished ✓');
-}
-
-// ── View period (filter tracker) ─────────────────────────────
-function setViewingPeriod(id) {
-  activePeriodId = (activePeriodId === id) ? null : id;
-  if (activePeriodId) {
-    localStorage.setItem('wt_active_period', activePeriodId);
-    // Jump datepicker to period start
-    const p = getActivePeriod();
-    if (p) {
-      const dp = document.getElementById('datePicker');
-      dp.value = p.start;
-    }
-  } else {
-    localStorage.removeItem('wt_active_period');
-  }
-  render();
-  renderHistory();
-}
-
-// ── Render ───────────────────────────────────────────────────
-function renderHistory() {
-  if (!db.periods) db.periods = [];
-  renderCompareChart();
-  const list = document.getElementById('histList');
-
-  // Destroy old charts
-  Object.keys(histCharts).forEach(k => {
-    if (histCharts[k]) { histCharts[k].destroy(); delete histCharts[k]; }
-  });
-
-  if (!db.periods.length) {
-    list.innerHTML = '<div class="periods-empty"><span class="periods-empty-icon">📉</span>No periods yet.<br>Tap <b>+ New Period</b> to add your first.</div>';
-    return;
-  }
-
-  list.innerHTML = '';
-  db.periods.forEach(p => {
-    const isViewing = activePeriodId === p.id;
-    const days = p.end ? Math.round((new Date(p.end) - new Date(p.start)) / 86400000) : Math.round((new Date() - new Date(p.start)) / 86400000);
-
-    // Actual weights within this period
-    const wEntries = Object.entries(db.weights)
-      .filter(([d]) => periodContainsDate(p, d))
-      .sort(([a],[b]) => a.localeCompare(b))
-      .map(([d,v]) => ({ d, v: parseFloat(v) }));
-
-    const lost = (p.startW && wEntries.length)
-      ? parseFloat((p.startW - wEntries[wEntries.length-1].v).toFixed(1))
-      : (p.startW && p.endW ? parseFloat((p.startW - p.endW).toFixed(1)) : null);
-    const rate = (lost !== null && days > 0) ? (lost / days).toFixed(3) : null;
-
-    const datesStr = p.end
-      ? `${fmtDate(p.start)} → ${fmtDate(p.end)}`
-      : `${fmtDate(p.start)} → ongoing`;
-
-    const card = document.createElement('div');
-    card.className = 'period-card' + (p.current ? ' is-current' : '') + (isViewing ? ' is-viewing' : '');
-    card.id = 'pcard-' + p.id;
-
-    const badgesHtml = [
-      p.current ? '<span class="pbadge pbadge-current">● Current</span>' : '',
-      p.done    ? '<span class="pbadge pbadge-done">✓ Done</span>'       : '',
-      isViewing ? '<span class="pbadge pbadge-viewing">👁 Viewing</span>' : '',
-    ].filter(Boolean).join('');
-
-    card.innerHTML = `
-      <div class="period-card-head">
-        <div class="period-card-info">
-          <div class="period-card-name" ondblclick="openPeriodModal(${p.id})" title="Double-click to edit">${p.name}</div>
-          <div class="period-card-dates">${datesStr}</div>
-          ${badgesHtml ? `<div class="period-badges">${badgesHtml}</div>` : ''}
-        </div>
-        <div class="period-card-actions">
-          <button class="btn-pact ${isViewing ? 'viewing-on primary' : ''}" onclick="setViewingPeriod(${p.id})">
-            ${isViewing ? '👁 Viewing' : '👁 View'}
-          </button>
-          <button class="btn-pact" onclick="openPeriodModal(${p.id})">✎ Edit</button>
-          ${p.current ? `<button class="btn-pact" onclick="finishPeriod(${p.id})">✓ Finish</button>` : ''}
-          <button class="btn-pact danger" onclick="deletePeriod(${p.id})">✕ Delete</button>
-        </div>
-      </div>
-      <div class="period-stats">
-        <div class="period-stat">
-          <div class="period-stat-l">Days</div>
-          <div class="period-stat-v">${days}</div>
-        </div>
-        <div class="period-stat">
-          <div class="period-stat-l">Lost</div>
-          <div class="period-stat-v ${lost !== null && lost > 0 ? '' : 'amber'}">
-            ${lost !== null ? (lost > 0 ? '−' : '+') + Math.abs(lost) + ' kg' : '—'}
-          </div>
-        </div>
-        <div class="period-stat">
-          <div class="period-stat-l">Per day</div>
-          <div class="period-stat-v muted">${rate !== null ? (parseFloat(rate) > 0 ? '−' : '+') + Math.abs(rate) + ' kg' : '—'}</div>
-        </div>
-      </div>
-      <div class="period-chart-wrap"><canvas id="hchart-${p.id}"></canvas></div>`;
-
-    list.appendChild(card);
-
-    // Mini chart — actual data or flat line if none
-    const ctx = document.getElementById('hchart-' + p.id).getContext('2d');
-    const actualDataset = wEntries.length >= 2 ? [{
-      label: 'Weight',
-      data: wEntries.map(e => ({ x: e.d, y: e.v })),
-      borderColor: p.current ? '#78dc8c' : 'rgba(120,220,140,.6)',
-      backgroundColor: 'rgba(120,220,140,.08)',
-      pointBackgroundColor: '#78dc8c', pointRadius: 3,
-      borderWidth: 2, tension: 0.3, fill: true,
-      parsing: { xAxisKey: 'x', yAxisKey: 'y' },
-    }] : [];
-
-    histCharts[p.id] = new Chart(ctx, {
-      type: 'line',
-      data: { datasets: actualDataset },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: {
-          backgroundColor: 'rgba(10,12,18,.95)',
-          titleFont: {family:'DM Mono',size:9}, bodyFont: {family:'DM Mono',size:11},
-          padding: 7, cornerRadius: 6,
-          callbacks: { title: items => fmtDate(items[0].raw.x) }
-        }},
-        scales: {
-          x: { type: 'category', display: false },
-          y: { grid: { color: 'rgba(120,220,140,.06)' }, ticks: { color: 'rgba(180,220,185,.35)', font:{family:'DM Mono',size:9}, maxTicksLimit: 3 } }
-        }
+      try {
+        await fetch(`${svc.url}?_=${start}`, { method: 'GET', cache: 'no-store', mode: 'no-cors' });
+        setSvcOnline(id, Date.now() - start);
+      } catch {
+        setSvcOffline(id);
       }
-    });
-  });
-}
+      clearTimeout(svcTimers[id]);
+      svcTimers[id] = setTimeout(() => probeService(id), svcState[id] === 'online' ? 1500 : 1000);
+    }
 
+    probeService('telegram');
+    probeService('yandex');
 
-// ============================================================
-//  RENDER ALL
-// ============================================================
-function render() {
-  updateActivePeriodBanner();
-  updateDatePickerConstraints();
-  renderCalories();
-  renderWeight();
-  renderWeightChart();
-  renderCalChart();
-  renderNotes();
-}
-function updateActivePeriodBanner() {
-  const bar = document.getElementById('activePeriodBar');
-  const p   = getActivePeriod();
-  if (p) {
-    bar.classList.remove('hidden');
-    const endStr = p.end ? fmtDate(p.end) : 'ongoing';
-    document.getElementById('apbText').innerHTML =
-      `Viewing <b>${p.name}</b> &nbsp;${fmtDate(p.start)} – ${endStr}`;
-  } else {
-    bar.classList.add('hidden');
-  }
-}
-function updateDatePickerConstraints() {
-  const dp = document.getElementById('datePicker');
-  const p  = getActivePeriod();
-  if (p) {
-    dp.min = p.start;
-    dp.max = p.end || todayStr();
-    // Clamp current value
-    if (dp.value < p.start) dp.value = p.start;
-    if (dp.max && dp.value > dp.max) dp.value = dp.max;
-  } else {
-    dp.min = '';
-    dp.max = todayStr();
-  }
-}
-function clearViewingPeriod() {
-  activePeriodId = null;
-  localStorage.removeItem('wt_active_period');
-  const dp = document.getElementById('datePicker');
-  dp.min = '';
-  dp.max = todayStr();
-  render();
-  if (document.getElementById('panel-history').classList.contains('active')) renderHistory();
-  renderCompareChart();
-}
-
-// ============================================================
-//  INIT
-// ============================================================
-(function init(){
-  document.getElementById('datePicker').value = todayStr();
-  document.getElementById('datePicker').addEventListener('change', render);
-  checkLateBanner();
-  setInterval(checkLateBanner, 60000); // re-check every minute
-  document.getElementById('weightInput').addEventListener('keydown', e => { if(e.key==='Enter') saveWeight(); });
-
-  const savedId = getClientId();
-
-  if (savedId) {
-    document.getElementById('setupPanel').style.display = 'none';
-    document.getElementById('clientIdInput').value = savedId;
-    // Wait for GIS script then start auth
-    window.addEventListener('load', () => {
-      setTimeout(startAuth, 800);
-    });
-  }
-
-  render();
-})();
-
-// Global error handler — logs full details for cross-origin and same-origin errors
-window.addEventListener('error', function(e) {
-  // "Script error." with no details = cross-origin script, browser intentionally hides details
-  // crossorigin="anonymous" on the script tag + CORS headers from CDN needed to expose them
-  if (e.message === 'Script error.' && !e.filename) {
-    return true; // suppress — cross-origin internal throw, app works fine
-  }
-  console.error('[FitFriend error]', e.message, '\nat', e.filename + ':' + e.lineno + ':' + e.colno,
-    '\n', e.error && e.error.stack);
-});
-window.addEventListener('unhandledrejection', function(e) {
-  console.error('[FitFriend unhandled promise]', e.reason);
-});
-</script>
+    // ── Service Worker registration ──
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/conn_check/sw.js')
+          .then(r => console.log('SW registered:', r.scope))
+          .catch(e => console.warn('SW registration failed:', e));
+      });
+    }
+  </script>
 </body>
 </html>
